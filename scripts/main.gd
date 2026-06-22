@@ -13,7 +13,8 @@ var scale_run: Vector2
 # 패럴렉스용 노드 레퍼런스
 var bg_far_node: Node2D    # 원거리 (구름) — 느리게 이동
 var bg_mid_node: Node2D    # 중거리 (나무/언덕) — 중간 속도
-var _prev_px: float = 0.0  # 이전 프레임 플레이어 X (delta 방식 계산용)
+var _prev_cam_x: float = 0.0  # 이전 프레임 카메라 실제 X
+var _cam_tween: Tween         # 카메라 offset 부드럽게 전환
 
 # ── 물리 상수 (에디터에서 바꾸고 싶으면 @export 추가) ──
 const GRAVITY       = 1400.0
@@ -29,20 +30,19 @@ func _ready() -> void:
 	_build_ground()
 	_build_player()
 	_build_ui()
-	_prev_px = player.position.x  # 첫 프레임 점프 방지
+	_prev_cam_x = player.position.x  # 첫 프레임 점프 방지
 
 func _process(_delta: float) -> void:
-	if not player: return
-	var px := player.position.x
-	var dx := px - _prev_px  # 이번 프레임에 플레이어가 이동한 거리
-	_prev_px = px
+	if not player or not camera: return
+	# 카메라 실제 화면 중심 X 기준 — smoothing + offset 변화 모두 반영됨
+	var cx := camera.get_screen_center_position().x
+	var dx := cx - _prev_cam_x
+	_prev_cam_x = cx
 
-	# 카메라는 플레이어와 100% 같이 이동
-	# 배경 노드가 플레이어의 X%만큼 같이 이동하면 → 화면에서 (100-X)% 속도로 흘러감
-	# 구름(원거리): 화면에서 15% 속도 → 노드는 85% 이동
+	# 구름(원거리): 화면에서 15% 속도 → 노드는 85% 같이 이동
 	if bg_far_node:
 		bg_far_node.position.x += dx * 0.85
-	# 나무(중거리): 화면에서 45% 속도 → 노드는 55% 이동
+	# 나무(중거리): 화면에서 45% 속도 → 노드는 55% 같이 이동
 	if bg_mid_node:
 		bg_mid_node.position.x += dx * 0.55
 
@@ -172,6 +172,13 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
 
+func _tween_camera_offset(target_x: float) -> void:
+	if camera.offset.x == target_x: return
+	if _cam_tween: _cam_tween.kill()
+	_cam_tween = create_tween()
+	_cam_tween.tween_property(camera, "offset:x", target_x, 0.3)\
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
 # ── UI ────────────────────────────────────────────────────
 func _build_ui() -> void:
 	var canvas := CanvasLayer.new()
@@ -214,13 +221,13 @@ func _physics_process(delta: float) -> void:
 
 	player.move_and_slide()
 
-	# 스프라이트 방향
+	# 스프라이트 방향 + 카메라 offset 부드럽게 전환
 	if dir < 0:
 		anim_sprite.flip_h = true
-		camera.offset.x = -80
+		_tween_camera_offset(-80)
 	elif dir > 0:
 		anim_sprite.flip_h = false
-		camera.offset.x = 80
+		_tween_camera_offset(80)
 
 	# 애니메이션 전환: 입력값(dir)으로 판단 — velocity는 물리 처리 후 튈 수 있음
 	if dir != 0:
