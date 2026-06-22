@@ -115,7 +115,7 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.sprite_frames = frames
 	# 캐릭터 크기 조정 (256px → 화면에 적당한 크기)
 	# 프레임 높이 기준으로 화면에서 약 200px 높이가 되도록 스케일
-	var target_height := 200.0
+	var target_height := 600.0
 	var scale_factor := target_height / frame_h
 	anim_sprite.scale = Vector2(scale_factor, scale_factor)
 	anim_sprite.play("run")
