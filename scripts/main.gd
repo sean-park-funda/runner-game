@@ -7,6 +7,8 @@ var player: CharacterBody2D
 var anim_sprite: AnimatedSprite2D
 var camera: Camera2D
 var info_label: Label
+var scale_idle: Vector2
+var scale_run: Vector2
 
 # ── 물리 상수 (에디터에서 바꾸고 싶으면 @export 추가) ──
 const GRAVITY       = 1400.0
@@ -129,10 +131,11 @@ func _load_sprite_sheet() -> void:
 
 	anim_sprite.sprite_frames = frames
 
-	# idle 프레임 높이 기준으로 스케일 (idle.png가 정사각 프레임)
+	# 두 애니 모두 화면에서 동일한 높이(600px)로 보이도록 각각 스케일 계산
 	var target_height := 600.0
-	var scale_factor := target_height / idle_fh
-	anim_sprite.scale = Vector2(scale_factor, scale_factor)
+	scale_idle = Vector2(target_height / idle_fh, target_height / idle_fh)
+	scale_run  = Vector2(target_height / run_fh,  target_height / run_fh)
+	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
 
 # ── UI ────────────────────────────────────────────────────
@@ -185,15 +188,17 @@ func _physics_process(delta: float) -> void:
 		anim_sprite.flip_h = false
 		camera.offset.x = 80
 
-	# 애니메이션 전환: 움직일 때 run, 정지 시 idle
+	# 애니메이션 전환: 움직일 때 run, 정지 시 idle (각각 맞는 스케일 적용)
 	if abs(player.velocity.x) > 10.0:
 		if anim_sprite.animation != "run":
 			anim_sprite.play("run")
+			anim_sprite.scale = scale_run
 		var spd_ratio: float = abs(player.velocity.x) / SPEED
 		anim_sprite.speed_scale = max(0.6, spd_ratio)
 	else:
 		if anim_sprite.animation != "idle":
 			anim_sprite.play("idle")
+			anim_sprite.scale = scale_idle
 		anim_sprite.speed_scale = 1.0
 
 	# UI 업데이트
