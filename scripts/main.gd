@@ -131,10 +131,10 @@ func _load_sprite_sheet() -> void:
 
 	anim_sprite.sprite_frames = frames
 
-	# 두 애니 모두 화면에서 동일한 높이(600px)로 보이도록 각각 스케일 계산
+	# run 기준 스케일로 통일 (run 프레임 높이 기준, idle도 동일 배율 적용)
 	var target_height := 600.0
-	scale_idle = Vector2(target_height / idle_fh, target_height / idle_fh)
-	scale_run  = Vector2(target_height / run_fh,  target_height / run_fh)
+	scale_run  = Vector2(target_height / run_fh, target_height / run_fh)
+	scale_idle = scale_run  # 같은 배율 → 프레임 내 캐릭터 크기가 자연스럽게 맞춰짐
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
 
