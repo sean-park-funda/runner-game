@@ -168,7 +168,7 @@ func _physics_process(delta: float) -> void:
 		camera.offset.x = 80
 
 	# 애니 속도를 이동 속도에 비례
-	var spd_ratio := abs(player.velocity.x) / SPEED
+	var spd_ratio: float = abs(player.velocity.x) / SPEED
 	anim_sprite.speed_scale = max(0.4, spd_ratio)
 
 	# UI 업데이트
