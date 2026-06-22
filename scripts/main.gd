@@ -13,7 +13,8 @@ const GRAVITY       = 1400.0
 const SPEED         = 340.0
 const SPRINT_SPEED  = 600.0
 const JUMP_VELOCITY = -680.0
-const FRAME_COUNT   = 7      # run.png 프레임 수 (1792÷256)
+const RUN_FRAMES    = 7      # run.png 프레임 수
+const IDLE_FRAMES   = 13     # idle.png 프레임 수
 const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
 
 func _ready() -> void:
@@ -96,29 +97,43 @@ func _build_player() -> void:
 	player.add_child(camera)
 
 func _load_sprite_sheet() -> void:
-	var texture: Texture2D = load("res://assets/sprites/run.png")
-	var img := texture.get_image()
-	var frame_w := img.get_width() / FRAME_COUNT
-	var frame_h := img.get_height()
-
 	var frames := SpriteFrames.new()
+
+	# ── run 애니메이션 ──────────────────────────────────────
+	var run_tex: Texture2D = load("res://assets/sprites/run.png")
+	var run_img := run_tex.get_image()
+	var run_fw := run_img.get_width() / RUN_FRAMES
+	var run_fh := run_img.get_height()
 	frames.add_animation("run")
 	frames.set_animation_speed("run", ANIM_FPS)
 	frames.set_animation_loop("run", true)
-
-	for i in FRAME_COUNT:
+	for i in RUN_FRAMES:
 		var atlas := AtlasTexture.new()
-		atlas.atlas = texture
-		atlas.region = Rect2(i * frame_w, 0, frame_w, frame_h)
+		atlas.atlas = run_tex
+		atlas.region = Rect2(i * run_fw, 0, run_fw, run_fh)
 		frames.add_frame("run", atlas)
 
+	# ── idle 애니메이션 ─────────────────────────────────────
+	var idle_tex: Texture2D = load("res://assets/sprites/idle.png")
+	var idle_img := idle_tex.get_image()
+	var idle_fw := idle_img.get_width() / IDLE_FRAMES
+	var idle_fh := idle_img.get_height()
+	frames.add_animation("idle")
+	frames.set_animation_speed("idle", ANIM_FPS)
+	frames.set_animation_loop("idle", true)
+	for i in IDLE_FRAMES:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = idle_tex
+		atlas.region = Rect2(i * idle_fw, 0, idle_fw, idle_fh)
+		frames.add_frame("idle", atlas)
+
 	anim_sprite.sprite_frames = frames
-	# 캐릭터 크기 조정 (256px → 화면에 적당한 크기)
-	# 프레임 높이 기준으로 화면에서 약 200px 높이가 되도록 스케일
+
+	# idle 프레임 높이 기준으로 스케일 (idle.png가 정사각 프레임)
 	var target_height := 600.0
-	var scale_factor := target_height / frame_h
+	var scale_factor := target_height / idle_fh
 	anim_sprite.scale = Vector2(scale_factor, scale_factor)
-	anim_sprite.play("run")
+	anim_sprite.play("idle")
 
 # ── UI ────────────────────────────────────────────────────
 func _build_ui() -> void:
@@ -170,9 +185,16 @@ func _physics_process(delta: float) -> void:
 		anim_sprite.flip_h = false
 		camera.offset.x = 80
 
-	# 애니 속도를 이동 속도에 비례
-	var spd_ratio: float = abs(player.velocity.x) / SPEED
-	anim_sprite.speed_scale = max(0.4, spd_ratio)
+	# 애니메이션 전환: 움직일 때 run, 정지 시 idle
+	if abs(player.velocity.x) > 10.0:
+		if anim_sprite.animation != "run":
+			anim_sprite.play("run")
+		var spd_ratio: float = abs(player.velocity.x) / SPEED
+		anim_sprite.speed_scale = max(0.6, spd_ratio)
+	else:
+		if anim_sprite.animation != "idle":
+			anim_sprite.play("idle")
+		anim_sprite.speed_scale = 1.0
 
 	# UI 업데이트
 	if info_label:
