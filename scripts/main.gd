@@ -10,6 +10,10 @@ var info_label: Label
 var scale_idle: Vector2
 var scale_run: Vector2
 
+# 패럴렉스용 노드 레퍼런스
+var bg_far_node: Node2D    # 원거리 (구름) — 느리게 이동
+var bg_mid_node: Node2D    # 중거리 (나무/언덕) — 중간 속도
+
 # ── 물리 상수 (에디터에서 바꾸고 싶으면 @export 추가) ──
 const GRAVITY       = 1400.0
 const SPEED         = 340.0
@@ -25,25 +29,50 @@ func _ready() -> void:
 	_build_player()
 	_build_ui()
 
+func _process(_delta: float) -> void:
+	if not player: return
+	var px := player.position.x
+
+	# 원거리(구름): 플레이어의 20% 속도로 따라옴 → 멀리 있는 느낌
+	if bg_far_node:
+		bg_far_node.position.x = px * 0.2
+
+	# 중거리(나무): 플레이어의 50% 속도
+	if bg_mid_node:
+		bg_mid_node.position.x = px * 0.5
+
 # ── 배경 ──────────────────────────────────────────────────
 func _build_background() -> void:
+	# 하늘 — CanvasLayer로 화면 고정 (항상 꽉 채움)
 	var canvas := CanvasLayer.new()
 	canvas.layer = -10
 	add_child(canvas)
-
 	var sky := ColorRect.new()
 	sky.color = Color(0.55, 0.82, 0.98)
 	sky.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	canvas.add_child(sky)
 
-	# 구름
-	for i in 8:
+	# 원거리: 구름 (world 공간, 패럴렉스 0.2x)
+	bg_far_node = Node2D.new()
+	add_child(bg_far_node)
+	for i in 20:
 		var cloud := Label.new()
-		cloud.text = ["☁", "⛅"][i % 2]
-		cloud.add_theme_font_size_override("font_size", randi_range(60, 100))
-		cloud.modulate = Color(1, 1, 1, 0.8)
-		cloud.position = Vector2(i * 450 + randi_range(-80, 80), randi_range(40, 180))
-		canvas.add_child(cloud)
+		cloud.text = ["☁", "⛅", "☁"][i % 3]
+		cloud.add_theme_font_size_override("font_size", randi_range(60, 110))
+		cloud.modulate = Color(1, 1, 1, randf_range(0.6, 0.9))
+		cloud.position = Vector2(i * 900 - 3000 + randi_range(-200, 200), randi_range(30, 160))
+		bg_far_node.add_child(cloud)
+
+	# 중거리: 나무/건물 (world 공간, 패럴렉스 0.5x)
+	bg_mid_node = Node2D.new()
+	add_child(bg_mid_node)
+	var tree_emojis := ["🌲", "🌳", "🏠", "🌲", "🌳", "🏢", "🌲"]
+	for i in 30:
+		var tree := Label.new()
+		tree.text = tree_emojis[i % tree_emojis.size()]
+		tree.add_theme_font_size_override("font_size", randi_range(55, 90))
+		tree.position = Vector2(i * 600 - 2000 + randi_range(-150, 150), GROUND_Y - randi_range(80, 130))
+		bg_mid_node.add_child(tree)
 
 # ── 지면 ──────────────────────────────────────────────────
 func _build_ground() -> void:
