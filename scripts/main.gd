@@ -40,12 +40,16 @@ func _process(_delta: float) -> void:
 	var dx := cx - _prev_cam_x
 	_prev_cam_x = cx
 
-	# 달리는 중이면 배경 이동량 3배 (속도감 강조)
-	var bg_mult := 3.0 if _is_running else 1.0
+	# 계수가 1.0 초과하면 역방향이 되므로 항상 1.0 미만으로 유지
+	# 계수가 작을수록 → 카메라보다 덜 따라감 → 화면에서 더 빠르게 흐름
+	# 정지: 구름 15%, 나무 45% 화면 스크롤
+	# 달리기: 구름 25%, 나무 80% 화면 스크롤 (속도감)
+	var far_factor := 0.75 if _is_running else 0.85
+	var mid_factor := 0.20 if _is_running else 0.55
 	if bg_far_node:
-		bg_far_node.position.x += dx * 0.85 * bg_mult
+		bg_far_node.position.x += dx * far_factor
 	if bg_mid_node:
-		bg_mid_node.position.x += dx * 0.55 * bg_mult
+		bg_mid_node.position.x += dx * mid_factor
 
 # ── 배경 ──────────────────────────────────────────────────
 func _build_background() -> void:
