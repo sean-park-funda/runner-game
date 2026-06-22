@@ -13,6 +13,7 @@ var scale_run: Vector2
 # 패럴렉스용 노드 레퍼런스
 var bg_far_node: Node2D    # 원거리 (구름) — 느리게 이동
 var bg_mid_node: Node2D    # 중거리 (나무/언덕) — 중간 속도
+var _prev_px: float = 0.0  # 이전 프레임 플레이어 X (delta 방식 계산용)
 
 # ── 물리 상수 (에디터에서 바꾸고 싶으면 @export 추가) ──
 const GRAVITY       = 1400.0
@@ -28,18 +29,22 @@ func _ready() -> void:
 	_build_ground()
 	_build_player()
 	_build_ui()
+	_prev_px = player.position.x  # 첫 프레임 점프 방지
 
 func _process(_delta: float) -> void:
 	if not player: return
 	var px := player.position.x
+	var dx := px - _prev_px  # 이번 프레임에 플레이어가 이동한 거리
+	_prev_px = px
 
-	# 원거리(구름): 플레이어의 20% 속도로 따라옴 → 멀리 있는 느낌
+	# 카메라는 플레이어와 100% 같이 이동
+	# 배경 노드가 플레이어의 X%만큼 같이 이동하면 → 화면에서 (100-X)% 속도로 흘러감
+	# 구름(원거리): 화면에서 15% 속도 → 노드는 85% 이동
 	if bg_far_node:
-		bg_far_node.position.x = px * 0.2
-
-	# 중거리(나무): 플레이어의 50% 속도
+		bg_far_node.position.x += dx * 0.85
+	# 나무(중거리): 화면에서 45% 속도 → 노드는 55% 이동
 	if bg_mid_node:
-		bg_mid_node.position.x = px * 0.5
+		bg_mid_node.position.x += dx * 0.55
 
 # ── 배경 ──────────────────────────────────────────────────
 func _build_background() -> void:
