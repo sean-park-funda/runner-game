@@ -15,6 +15,7 @@ var bg_far_node: Node2D    # 원거리 (구름) — 느리게 이동
 var bg_mid_node: Node2D    # 중거리 (나무/언덕) — 중간 속도
 var _prev_cam_x: float = 0.0  # 이전 프레임 카메라 실제 X
 var _cam_tween: Tween         # 카메라 offset 부드럽게 전환
+var _is_running: bool = false  # 달리는 중 여부 (배경 속도 배율용)
 
 # ── 물리 상수 (에디터에서 바꾸고 싶으면 @export 추가) ──
 const GRAVITY       = 1400.0
@@ -39,12 +40,12 @@ func _process(_delta: float) -> void:
 	var dx := cx - _prev_cam_x
 	_prev_cam_x = cx
 
-	# 구름(원거리): 화면에서 15% 속도 → 노드는 85% 같이 이동
+	# 달리는 중이면 배경 이동량 3배 (속도감 강조)
+	var bg_mult := 3.0 if _is_running else 1.0
 	if bg_far_node:
-		bg_far_node.position.x += dx * 0.85
-	# 나무(중거리): 화면에서 45% 속도 → 노드는 55% 같이 이동
+		bg_far_node.position.x += dx * 0.85 * bg_mult
 	if bg_mid_node:
-		bg_mid_node.position.x += dx * 0.55
+		bg_mid_node.position.x += dx * 0.55 * bg_mult
 
 # ── 배경 ──────────────────────────────────────────────────
 func _build_background() -> void:
@@ -228,6 +229,8 @@ func _physics_process(delta: float) -> void:
 	elif dir > 0:
 		anim_sprite.flip_h = false
 		_tween_camera_offset(80)
+
+	_is_running = dir != 0
 
 	# 애니메이션 전환: 입력값(dir)으로 판단 — velocity는 물리 처리 후 튈 수 있음
 	if dir != 0:
