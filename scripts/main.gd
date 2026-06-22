@@ -188,8 +188,8 @@ func _physics_process(delta: float) -> void:
 		anim_sprite.flip_h = false
 		camera.offset.x = 80
 
-	# 애니메이션 전환: 움직일 때 run, 정지 시 idle (각각 맞는 스케일 적용)
-	if abs(player.velocity.x) > 10.0:
+	# 애니메이션 전환: 입력값(dir)으로 판단 — velocity는 물리 처리 후 튈 수 있음
+	if dir != 0:
 		if anim_sprite.animation != "run":
 			anim_sprite.play("run")
 			anim_sprite.scale = scale_run
