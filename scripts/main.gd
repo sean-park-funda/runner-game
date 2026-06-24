@@ -186,10 +186,8 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.sprite_frames = frames
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
-	# run 기준 스케일로 통일 (run 프레임 높이 기준, idle도 동일 배율 적용)
-	var target_height := 600.0
-	scale_run  = Vector2(target_height / run_fh, target_height / run_fh)
-	scale_idle = scale_run * 1.2
+	scale_run  = Vector2.ONE
+	scale_idle = Vector2.ONE
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
 
@@ -198,7 +196,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_Z and not _kicking:
 			_kicking = true
 			anim_sprite.play("kick")
-			anim_sprite.scale = scale_run
+			anim_sprite.scale = Vector2.ONE
 
 func _on_kick_finished() -> void:
 	if anim_sprite.animation == "kick":
