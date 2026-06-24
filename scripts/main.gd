@@ -286,7 +286,7 @@ func _load_sprite_sheet() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		var kc := event.physical_keycode
+		var kc: int = event.physical_keycode
 		if (kc == KEY_SPACE or kc == KEY_Z) and not _kicking and not _punching:
 			_kicking = true
 			anim_sprite.play("kick")
