@@ -280,7 +280,7 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.sprite_frames = frames
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
-	scale_run   = Vector2(0.85, 0.85)  # HD 512px (아트워크가 프레임을 꽉 채움)
+	scale_run   = Vector2(0.73, 0.73)  # run 캐릭터가 프레임 95% 차지 (idle은 55%) → 보정
 	scale_idle  = Vector2(1.25, 1.25)  # HD 512px
 	scale_punch = Vector2(0.9, 0.9)    # 펀치 스프라이트 아트워크가 더 크게 그려짐
 	anim_sprite.scale = scale_idle
