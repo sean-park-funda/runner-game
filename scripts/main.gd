@@ -193,7 +193,7 @@ func _build_player() -> void:
 
 	# AnimatedSprite2D + 스프라이트 시트 로딩
 	anim_sprite = AnimatedSprite2D.new()
-	anim_sprite.position = Vector2(0, -60)
+	anim_sprite.position = Vector2(0, -23)
 	player.add_child(anim_sprite)
 	_load_sprite_sheet()
 
@@ -280,8 +280,8 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.sprite_frames = frames
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
-	scale_run   = Vector2(0.73, 0.73)  # run 캐릭터가 프레임 95% 차지 (idle은 55%) → 보정
-	scale_idle  = Vector2(1.25, 1.25)  # HD 512px
+	scale_run   = Vector2(0.73, 0.73)  # 캐릭터가 프레임 95% 차지
+	scale_idle  = Vector2(0.73, 0.73)  # 새 idle도 프레임 97% 차지 → run과 동일 보정
 	scale_punch = Vector2(0.9, 0.9)    # 펀치 스프라이트 아트워크가 더 크게 그려짐
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
@@ -305,16 +305,17 @@ func _on_kick_finished() -> void:
 		_kicking = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_idle
-		anim_sprite.position.y = -60
+		anim_sprite.position.y = -23
 	elif anim_sprite.animation == "punch":
 		_punching = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_idle
-		anim_sprite.position.y = -60
+		anim_sprite.position.y = -23
 	elif anim_sprite.animation == "jump":
 		_landing = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_idle
+		anim_sprite.position.y = -23
 
 func _tween_camera_offset(target_x: float) -> void:
 	if camera.offset.x == target_x: return
@@ -408,7 +409,7 @@ func _physics_process(delta: float) -> void:
 			if anim_sprite.animation != "idle":
 				anim_sprite.play("idle")
 				anim_sprite.scale = scale_idle
-				anim_sprite.position.y = -60
+				anim_sprite.position.y = -23  # 새 idle도 프레임 상단에 치우침
 			anim_sprite.speed_scale = 1.0
 
 	# UI 업데이트
