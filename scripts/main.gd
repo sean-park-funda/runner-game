@@ -26,7 +26,7 @@ const SPEED         = 340.0
 const SPRINT_SPEED  = 600.0
 const JUMP_VELOCITY = -680.0
 const RUN_FRAMES    = 7      # run.png 프레임 수
-const IDLE_FRAMES   = 15     # idle.png 프레임 수
+const IDLE_FRAMES   = 24     # idle.png 프레임 수 (512px HD, 24프레임)
 const KICK_FRAMES   = 9      # kick.png 프레임 수
 const JUMP_FRAMES   = 15     # jump.png 프레임 수
 const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
@@ -246,7 +246,7 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
 	scale_run  = Vector2(2.5, 2.5)
-	scale_idle = Vector2(2.5, 2.5)
+	scale_idle = Vector2(1.25, 1.25)  # HD(512px) → 256px 시절의 절반 스케일로 동일 크기
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
 
