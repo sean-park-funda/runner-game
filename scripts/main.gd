@@ -67,7 +67,7 @@ func _build_background() -> void:
 	canvas.layer = -10
 	add_child(canvas)
 	var sky := ColorRect.new()
-	sky.color = Color(0.10, 0.03, 0.03)  # 다크 버건디
+	sky.color = Color(0.03, 0.05, 0.15)  # 딥 네이비
 	sky.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	canvas.add_child(sky)
 
@@ -91,18 +91,26 @@ func _build_background() -> void:
 		var by := GROUND_Y - bh
 		_add_building(bg_mid_node, bx, by, bw, bh, Color(1,1,1,0.9), 2)
 
-	# 도로 마킹 레이어 (고속)
+	# 도로 마킹 레이어 (고속 스크롤 — 속도감)
 	bg_road_node = Node2D.new()
 	add_child(bg_road_node)
-	var road_y := GROUND_Y + 18.0
-	var dash_w := 100
-	var gap_w  := 70
-	for i in 120:
-		var dash := ColorRect.new()
-		dash.color = Color(1, 1, 1, 0.85)
-		dash.size = Vector2(dash_w, 5)
-		dash.position = Vector2(i * (dash_w + gap_w) - 8000.0, road_y)
-		bg_road_node.add_child(dash)
+
+	# 차선 구성: 상단/중앙/하단 3열
+	var dash_w    := 140   # 긴 대시
+	var gap_w     := 60
+	var lane_defs := [
+		{ "y": GROUND_Y + 20,  "alpha": 0.90, "h": 5 },  # 상단 차선 (캐릭터 발 바로 아래)
+		{ "y": GROUND_Y + 55,  "alpha": 0.60, "h": 4 },  # 중앙 차선
+		{ "y": GROUND_Y + 90,  "alpha": 0.30, "h": 3 },  # 하단 차선 (원근감)
+	]
+	var dash_count := 150
+	for lane in lane_defs:
+		for i in dash_count:
+			var dash := ColorRect.new()
+			dash.color = Color(1, 1, 1, lane["alpha"])
+			dash.size = Vector2(dash_w, lane["h"])
+			dash.position = Vector2(i * (dash_w + gap_w) - 10000.0, lane["y"])
+			bg_road_node.add_child(dash)
 
 func _add_building(parent: Node2D, bx: float, by: float, bw: float, bh: float, color: Color, border: int) -> void:
 	# 외곽선 (흰색)
@@ -113,7 +121,7 @@ func _add_building(parent: Node2D, bx: float, by: float, bw: float, bh: float, c
 	parent.add_child(outline)
 	# 내부 (검정)
 	var inner := ColorRect.new()
-	inner.color = Color(0.10, 0.03, 0.03)
+	inner.color = Color(0.03, 0.05, 0.15)  # 딥 네이비
 	inner.size = Vector2(bw - border * 2, bh - border)
 	inner.position = Vector2(bx + border, by + border)
 	parent.add_child(inner)
@@ -134,18 +142,24 @@ func _add_building(parent: Node2D, bx: float, by: float, bw: float, bh: float, c
 
 # ── 지면 ──────────────────────────────────────────────────
 func _build_ground() -> void:
-	# 누아르 도로 (아스팔트)
+	# 도로 (딥 네이비 아스팔트)
 	var road := ColorRect.new()
-	road.color = Color(0.14, 0.06, 0.06)  # 버건디 틴트 아스팔트
+	road.color = Color(0.05, 0.07, 0.18)
 	road.size = Vector2(WORLD_WIDTH, 300)
 	road.position = Vector2(-WORLD_WIDTH / 2, GROUND_Y)
 	add_child(road)
-	# 도로 경계선 (흰 라인)
-	var edge := ColorRect.new()
-	edge.color = Color(1, 1, 1, 0.6)
-	edge.size = Vector2(WORLD_WIDTH, 3)
-	edge.position = Vector2(-WORLD_WIDTH / 2, GROUND_Y)
-	add_child(edge)
+	# 도로 상단 경계선 (흰 라인)
+	var edge_top := ColorRect.new()
+	edge_top.color = Color(1, 1, 1, 0.75)
+	edge_top.size = Vector2(WORLD_WIDTH, 3)
+	edge_top.position = Vector2(-WORLD_WIDTH / 2, GROUND_Y)
+	add_child(edge_top)
+	# 도로 하단 경계선
+	var edge_bot := ColorRect.new()
+	edge_bot.color = Color(1, 1, 1, 0.4)
+	edge_bot.size = Vector2(WORLD_WIDTH, 2)
+	edge_bot.position = Vector2(-WORLD_WIDTH / 2, GROUND_Y + 120)
+	add_child(edge_bot)
 
 	# 충돌체
 	var body := StaticBody2D.new()
