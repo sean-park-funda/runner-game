@@ -18,6 +18,7 @@ var _prev_cam_x: float = 0.0  # 이전 프레임 카메라 실제 X
 var _cam_tween: Tween         # 카메라 offset 부드럽게 전환
 var _is_running: bool = false   # 달리는 중 여부 (배경 속도 배율용)
 var _kicking: bool = false      # 발차기 중 (완료까지 다른 애니 차단)
+var _punching: bool = false     # 연속펀치 중 (완료까지 다른 애니 차단)
 var _jump_pending: bool = false  # 크라우치 준비 중 (6프레임 후 실제 점프)
 var _was_airborne: bool = false  # 착지 감지용
 var _landing: bool = false       # 착지 후 recovery 모션 재생 중
@@ -31,6 +32,7 @@ const RUN_FRAMES    = 7      # run.png 프레임 수
 const IDLE_FRAMES   = 24     # idle.png 프레임 수 (512px HD, 24프레임)
 const KICK_FRAMES   = 9      # kick.png 프레임 수
 const JUMP_FRAMES   = 17     # jump.png 프레임 수 (512px HD, 17프레임)
+const PUNCH_FRAMES  = 44     # punch.png 프레임 수
 const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
 
 func _ready() -> void:
@@ -260,6 +262,20 @@ func _load_sprite_sheet() -> void:
 		atlas.region = Rect2(i * jump_fw, 0, jump_fw, jump_fh)
 		frames.add_frame("jump", atlas)
 
+	# ── punch 애니메이션 ────────────────────────────────────
+	var punch_tex: Texture2D = load("res://assets/sprites/punch.png")
+	var punch_img := punch_tex.get_image()
+	var punch_fw := punch_img.get_width() / PUNCH_FRAMES
+	var punch_fh := punch_img.get_height()
+	frames.add_animation("punch")
+	frames.set_animation_speed("punch", ANIM_FPS)
+	frames.set_animation_loop("punch", false)
+	for i in PUNCH_FRAMES:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = punch_tex
+		atlas.region = Rect2(i * punch_fw, 0, punch_fw, punch_fh)
+		frames.add_frame("punch", atlas)
+
 	anim_sprite.sprite_frames = frames
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
@@ -268,16 +284,25 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_SPACE and not _kicking:
+		var kc := event.physical_keycode
+		if (kc == KEY_SPACE or kc == KEY_Z) and not _kicking and not _punching:
 			_kicking = true
 			anim_sprite.play("kick")
+			anim_sprite.scale = Vector2(2.5, 2.5)
+		elif kc == KEY_X and not _kicking and not _punching:
+			_punching = true
+			anim_sprite.play("punch")
 			anim_sprite.scale = Vector2(2.5, 2.5)
 
 func _on_kick_finished() -> void:
 	if anim_sprite.animation == "kick":
 		_kicking = false
+		anim_sprite.play("idle")
+		anim_sprite.scale = scale_idle
+	elif anim_sprite.animation == "punch":
+		_punching = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_idle
 	elif anim_sprite.animation == "jump":
@@ -304,7 +329,7 @@ func _build_ui() -> void:
 	canvas.add_child(info_label)
 
 	var hint := Label.new()
-	hint.text = "← → 이동   ↑ 점프   Shift 스프린트   Space 발차기"
+	hint.text = "← → 이동   ↑ 점프   Shift 스프린트   Space/Z 발차기   X 연속펀치"
 	hint.position = Vector2(20, 690)
 	hint.add_theme_font_size_override("font_size", 20)
 	hint.add_theme_color_override("font_color", Color(0.15, 0.15, 0.15))
@@ -321,7 +346,7 @@ func _physics_process(delta: float) -> void:
 		player.velocity.y = 0.0
 
 	# 점프 입력 → 크라우치 애니 시작 (아직 y 이동 없음)
-	if player.is_on_floor() and not _jump_pending and not _kicking and \
+	if player.is_on_floor() and not _jump_pending and not _kicking and not _punching and \
 		Input.is_action_just_pressed("ui_up"):
 		_jump_pending = true
 		anim_sprite.play("jump")
@@ -357,10 +382,10 @@ func _physics_process(delta: float) -> void:
 		anim_sprite.flip_h = false
 		_tween_camera_offset(80)
 
-	_is_running = dir != 0 and not _kicking and not _jump_pending and not _landing
+	_is_running = dir != 0 and not _kicking and not _punching and not _jump_pending and not _landing
 
-	# 발차기 / 점프 준비 / 착지 recovery 중이면 애니 전환 차단
-	if not _kicking and not _jump_pending and not _landing:
+	# 발차기 / 펀치 / 점프 준비 / 착지 recovery 중이면 애니 전환 차단
+	if not _kicking and not _punching and not _jump_pending and not _landing:
 		if not player.is_on_floor():
 			# 공중: 점프 애니 (준비 후 이미 재생 중이면 그대로 유지)
 			if anim_sprite.animation != "jump":
