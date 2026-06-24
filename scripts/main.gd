@@ -68,7 +68,7 @@ func _build_background() -> void:
 	canvas.layer = -10
 	add_child(canvas)
 	var sky := ColorRect.new()
-	sky.color = Color(0.03, 0.05, 0.15)  # 딥 네이비
+	sky.color = Color(0.30, 0.12, 0.02)  # 다크 앰버/오렌지
 	sky.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	canvas.add_child(sky)
 
@@ -101,7 +101,7 @@ func _add_building(parent: Node2D, bx: float, by: float, bw: float, bh: float, c
 	parent.add_child(outline)
 	# 내부 (검정)
 	var inner := ColorRect.new()
-	inner.color = Color(0.03, 0.05, 0.15)  # 딥 네이비
+	inner.color = Color(0.30, 0.12, 0.02)  # 다크 앰버/오렌지
 	inner.size = Vector2(bw - border * 2, bh - border)
 	inner.position = Vector2(bx + border, by + border)
 	parent.add_child(inner)
@@ -124,7 +124,7 @@ func _add_building(parent: Node2D, bx: float, by: float, bw: float, bh: float, c
 func _build_ground() -> void:
 	# 도로 (딥 네이비 아스팔트)
 	var road := ColorRect.new()
-	road.color = Color(0.05, 0.07, 0.18)
+	road.color = Color(0.22, 0.09, 0.01)  # 더 어두운 번트 오렌지
 	road.size = Vector2(WORLD_WIDTH, 300)
 	road.position = Vector2(-WORLD_WIDTH / 2, GROUND_Y)
 	add_child(road)
