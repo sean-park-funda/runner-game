@@ -261,7 +261,7 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.sprite_frames = frames
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
-	scale_run  = Vector2(2.5, 2.5)
+	scale_run  = Vector2(1.25, 1.25)  # HD 512px
 	scale_idle = Vector2(1.25, 1.25)  # HD(512px) → 256px 시절의 절반 스케일로 동일 크기
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
