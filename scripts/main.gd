@@ -135,7 +135,7 @@ func _build_player() -> void:
 	camera = Camera2D.new()
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 6.0
-	camera.offset = Vector2(80, -40)   # 진행 방향 앞쪽을 더 보여줌
+	camera.offset = Vector2(80, 80)   # 캐릭터를 화면 중상단에 배치
 	player.add_child(camera)
 
 func _load_sprite_sheet() -> void:
@@ -186,8 +186,8 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.sprite_frames = frames
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
-	scale_run  = Vector2.ONE
-	scale_idle = Vector2.ONE
+	scale_run  = Vector2(2.5, 2.5)
+	scale_idle = Vector2(2.5, 2.5)
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
 
@@ -196,7 +196,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_Z and not _kicking:
 			_kicking = true
 			anim_sprite.play("kick")
-			anim_sprite.scale = Vector2.ONE
+			anim_sprite.scale = Vector2(2.5, 2.5)
 
 func _on_kick_finished() -> void:
 	if anim_sprite.animation == "kick":
