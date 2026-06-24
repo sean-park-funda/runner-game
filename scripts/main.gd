@@ -11,8 +11,9 @@ var scale_idle: Vector2
 var scale_run: Vector2
 
 # 패럴렉스용 노드 레퍼런스
-var bg_far_node: Node2D    # 원거리 (구름) — 느리게 이동
-var bg_mid_node: Node2D    # 중거리 (나무/언덕) — 중간 속도
+var bg_far_node: Node2D    # 원거리 빌딩 실루엣 — 느리게
+var bg_mid_node: Node2D    # 중거리 빌딩 — 중간
+var bg_road_node: Node2D   # 도로 마킹 — 고속 (건물의 5배)
 var _prev_cam_x: float = 0.0  # 이전 프레임 카메라 실제 X
 var _cam_tween: Tween         # 카메라 offset 부드럽게 전환
 var _is_running: bool = false  # 달리는 중 여부 (배경 속도 배율용)
@@ -42,63 +43,105 @@ func _process(_delta: float) -> void:
 	var dx := cx - _prev_cam_x
 	_prev_cam_x = cx
 
-	# 계수가 작을수록 화면에서 더 빠르게 흐름 (1.0 초과하면 역방향)
-	# 정지: 구름 45%, 나무 90% 화면 스크롤 (기존 3배)
-	# 달리기: 구름 75%, 나무 99% 화면 스크롤 (박진감)
+	# 빌딩(원거리): 화면 45% 스크롤 / 달릴때 75%
 	var far_factor := 0.25 if _is_running else 0.55
-	var mid_factor := 0.01 if _is_running else 0.10
+	# 빌딩(중거리): 화면 70% 스크롤 / 달릴때 90%
+	var mid_factor := 0.10 if _is_running else 0.30
+	# 도로 마킹: 화면 95% 스크롤 (건물 대비 ~5배 빠름)
+	var road_factor := 0.05
 	if bg_far_node:
 		bg_far_node.position.x += dx * far_factor
 	if bg_mid_node:
 		bg_mid_node.position.x += dx * mid_factor
+	if bg_road_node:
+		bg_road_node.position.x += dx * road_factor
 
 # ── 배경 ──────────────────────────────────────────────────
 func _build_background() -> void:
-	# 하늘 — CanvasLayer로 화면 고정 (항상 꽉 채움)
+	# 누아르 하늘 — 거의 검정
 	var canvas := CanvasLayer.new()
 	canvas.layer = -10
 	add_child(canvas)
 	var sky := ColorRect.new()
-	sky.color = Color(0.55, 0.82, 0.98)
+	sky.color = Color(0.04, 0.04, 0.07)
 	sky.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	canvas.add_child(sky)
 
-	# 원거리: 구름 (world 공간, 패럴렉스 0.2x)
+	# 원거리: 대형 빌딩 실루엣 (흰 라인)
 	bg_far_node = Node2D.new()
 	add_child(bg_far_node)
-	for i in 20:
-		var cloud := Label.new()
-		cloud.text = ["☁", "⛅", "☁"][i % 3]
-		cloud.add_theme_font_size_override("font_size", randi_range(60, 110))
-		cloud.modulate = Color(1, 1, 1, randf_range(0.6, 0.9))
-		cloud.position = Vector2(i * 900 - 3000 + randi_range(-200, 200), randi_range(30, 160))
-		bg_far_node.add_child(cloud)
+	for i in 30:
+		var bw := randi_range(80, 220)
+		var bh := randi_range(280, 520)
+		var bx := i * 700 - 6000 + randi_range(-100, 100)
+		var by := GROUND_Y - bh
+		_add_building(bg_far_node, bx, by, bw, bh, Color(1,1,1,0.7), 3)
 
-	# 중거리: 나무/건물 (world 공간, 패럴렉스 0.5x)
+	# 중거리: 소형 빌딩 (더 선명한 흰 라인)
 	bg_mid_node = Node2D.new()
 	add_child(bg_mid_node)
-	var tree_emojis := ["🌲", "🌳", "🏠", "🌲", "🌳", "🏢", "🌲"]
-	for i in 30:
-		var tree := Label.new()
-		tree.text = tree_emojis[i % tree_emojis.size()]
-		tree.add_theme_font_size_override("font_size", randi_range(55, 90))
-		tree.position = Vector2(i * 600 - 2000 + randi_range(-150, 150), GROUND_Y - randi_range(80, 130))
-		bg_mid_node.add_child(tree)
+	for i in 25:
+		var bw := randi_range(50, 130)
+		var bh := randi_range(120, 260)
+		var bx := i * 500 - 4000 + randi_range(-80, 80)
+		var by := GROUND_Y - bh
+		_add_building(bg_mid_node, bx, by, bw, bh, Color(1,1,1,0.9), 2)
+
+	# 도로 마킹 레이어 (고속)
+	bg_road_node = Node2D.new()
+	add_child(bg_road_node)
+	var road_y := GROUND_Y + 18.0
+	var dash_w := 100
+	var gap_w  := 70
+	for i in 120:
+		var dash := ColorRect.new()
+		dash.color = Color(1, 1, 1, 0.85)
+		dash.size = Vector2(dash_w, 5)
+		dash.position = Vector2(i * (dash_w + gap_w) - 8000.0, road_y)
+		bg_road_node.add_child(dash)
+
+func _add_building(parent: Node2D, bx: float, by: float, bw: float, bh: float, color: Color, border: int) -> void:
+	# 외곽선 (흰색)
+	var outline := ColorRect.new()
+	outline.color = color
+	outline.size = Vector2(bw, bh)
+	outline.position = Vector2(bx, by)
+	parent.add_child(outline)
+	# 내부 (검정)
+	var inner := ColorRect.new()
+	inner.color = Color(0.04, 0.04, 0.07)
+	inner.size = Vector2(bw - border * 2, bh - border)
+	inner.position = Vector2(bx + border, by + border)
+	parent.add_child(inner)
+	# 창문 (일부만 켜진 상태)
+	var ww := 10.0
+	var wh := 8.0
+	var cols := int((bw - 20) / (ww + 7))
+	var rows := int((bh - 20) / (wh + 10))
+	for r in rows:
+		for c in cols:
+			if randf() < 0.35:
+				var win := ColorRect.new()
+				win.color = color
+				win.modulate.a = randf_range(0.3, 1.0)
+				win.size = Vector2(ww, wh)
+				win.position = Vector2(bx + 10 + c * (ww + 7), by + 12 + r * (wh + 10))
+				parent.add_child(win)
 
 # ── 지면 ──────────────────────────────────────────────────
 func _build_ground() -> void:
-	# 시각: 초록 땅
-	var grass := ColorRect.new()
-	grass.color = Color(0.28, 0.62, 0.18)
-	grass.size = Vector2(WORLD_WIDTH, 300)
-	grass.position = Vector2(-WORLD_WIDTH / 2, GROUND_Y)
-	add_child(grass)
-
-	var dirt := ColorRect.new()
-	dirt.color = Color(0.55, 0.36, 0.18)
-	dirt.size = Vector2(WORLD_WIDTH, 280)
-	dirt.position = Vector2(-WORLD_WIDTH / 2, GROUND_Y + 20)
-	add_child(dirt)
+	# 누아르 도로 (아스팔트)
+	var road := ColorRect.new()
+	road.color = Color(0.12, 0.12, 0.14)
+	road.size = Vector2(WORLD_WIDTH, 300)
+	road.position = Vector2(-WORLD_WIDTH / 2, GROUND_Y)
+	add_child(road)
+	# 도로 경계선 (흰 라인)
+	var edge := ColorRect.new()
+	edge.color = Color(1, 1, 1, 0.6)
+	edge.size = Vector2(WORLD_WIDTH, 3)
+	edge.position = Vector2(-WORLD_WIDTH / 2, GROUND_Y)
+	add_child(edge)
 
 	# 충돌체
 	var body := StaticBody2D.new()
