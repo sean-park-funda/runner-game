@@ -20,6 +20,7 @@ var _is_running: bool = false   # 달리는 중 여부 (배경 속도 배율용)
 var _kicking: bool = false      # 발차기 중 (완료까지 다른 애니 차단)
 var _jump_pending: bool = false  # 크라우치 준비 중 (6프레임 후 실제 점프)
 var _was_airborne: bool = false  # 착지 감지용
+var _landing: bool = false       # 착지 후 recovery 모션 재생 중
 
 # ── 물리 상수 (에디터에서 바꾸고 싶으면 @export 추가) ──
 const GRAVITY       = 1400.0
@@ -263,6 +264,10 @@ func _on_kick_finished() -> void:
 		_kicking = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_idle
+	elif anim_sprite.animation == "jump":
+		_landing = false
+		anim_sprite.play("idle")
+		anim_sprite.scale = scale_idle
 
 func _tween_camera_offset(target_x: float) -> void:
 	if camera.offset.x == target_x: return
@@ -321,11 +326,13 @@ func _physics_process(delta: float) -> void:
 
 	player.move_and_slide()
 
-	# 착지 감지 → jump 애니 13번 프레임(index 12)으로 스냅
+	# 착지 감지 → jump 애니 13번 프레임(index 12)으로 스냅 후 recovery 재생
 	var is_on_floor_now := player.is_on_floor()
 	if anim_sprite.animation == "jump" and not _jump_pending:
 		if _was_airborne and is_on_floor_now and anim_sprite.frame < 12:
 			anim_sprite.frame = 12
+			_landing = true
+			anim_sprite.play("jump")  # frame 12부터 끝까지 재생
 	_was_airborne = not is_on_floor_now
 
 	# 스프라이트 방향 + 카메라 offset 부드럽게 전환
@@ -336,10 +343,10 @@ func _physics_process(delta: float) -> void:
 		anim_sprite.flip_h = false
 		_tween_camera_offset(80)
 
-	_is_running = dir != 0 and not _kicking and not _jump_pending
+	_is_running = dir != 0 and not _kicking and not _jump_pending and not _landing
 
-	# 발차기 / 점프 준비 중이면 애니 전환 차단
-	if not _kicking and not _jump_pending:
+	# 발차기 / 점프 준비 / 착지 recovery 중이면 애니 전환 차단
+	if not _kicking and not _jump_pending and not _landing:
 		if not player.is_on_floor():
 			# 공중: 점프 애니 (준비 후 이미 재생 중이면 그대로 유지)
 			if anim_sprite.animation != "jump":
