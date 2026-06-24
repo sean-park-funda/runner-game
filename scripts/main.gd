@@ -294,7 +294,7 @@ func _input(event: InputEvent) -> void:
 		elif kc == KEY_X and not _kicking and not _punching:
 			_punching = true
 			anim_sprite.play("punch")
-			anim_sprite.scale = Vector2(2.5, 2.5)
+			anim_sprite.scale = scale_idle  # HD 512px
 
 func _on_kick_finished() -> void:
 	if anim_sprite.animation == "kick":
