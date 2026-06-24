@@ -27,6 +27,7 @@ const JUMP_VELOCITY = -680.0
 const RUN_FRAMES    = 7      # run.png 프레임 수
 const IDLE_FRAMES   = 15     # idle.png 프레임 수
 const KICK_FRAMES   = 9      # kick.png 프레임 수
+const JUMP_FRAMES   = 15     # jump.png 프레임 수
 const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
 
 func _ready() -> void:
@@ -226,6 +227,20 @@ func _load_sprite_sheet() -> void:
 		atlas.region = Rect2(i * kick_fw, 0, kick_fw, kick_fh)
 		frames.add_frame("kick", atlas)
 
+	# ── jump 애니메이션 ─────────────────────────────────────
+	var jump_tex: Texture2D = load("res://assets/sprites/jump.png")
+	var jump_img := jump_tex.get_image()
+	var jump_fw := jump_img.get_width() / JUMP_FRAMES
+	var jump_fh := jump_img.get_height()
+	frames.add_animation("jump")
+	frames.set_animation_speed("jump", ANIM_FPS)
+	frames.set_animation_loop("jump", false)  # 한 번 재생 후 마지막 프레임 유지
+	for i in JUMP_FRAMES:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = jump_tex
+		atlas.region = Rect2(i * jump_fw, 0, jump_fw, jump_fh)
+		frames.add_frame("jump", atlas)
+
 	anim_sprite.sprite_frames = frames
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
@@ -308,7 +323,12 @@ func _physics_process(delta: float) -> void:
 
 	# 발차기 중이면 애니 전환 차단
 	if not _kicking:
-		if dir != 0:
+		if not player.is_on_floor():
+			# 공중: 점프 애니
+			if anim_sprite.animation != "jump":
+				anim_sprite.play("jump")
+				anim_sprite.scale = scale_idle
+		elif dir != 0:
 			if anim_sprite.animation != "run":
 				anim_sprite.play("run")
 				anim_sprite.scale = scale_run
