@@ -72,11 +72,13 @@ func _build_background() -> void:
 	canvas.layer = -10
 	add_child(canvas)
 	var sky := ColorRect.new()
-	sky.color = Color(0.30, 0.12, 0.02)  # 다크 앰버/오렌지
+	sky.color = Color(1.0, 1.0, 1.0)  # 흰색 배경
 	sky.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	canvas.add_child(sky)
 
-	# 원거리: 대형 빌딩 실루엣 (흰 라인)
+	var LINE = Color(0.30, 0.12, 0.02)  # 앰버 (기존 배경색)
+
+	# 원거리: 대형 빌딩 (앰버 라인)
 	bg_far_node = Node2D.new()
 	add_child(bg_far_node)
 	for i in 30:
@@ -84,9 +86,9 @@ func _build_background() -> void:
 		var bh := randi_range(280, 520)
 		var bx := i * 700 - 6000 + randi_range(-100, 100)
 		var by := GROUND_Y - bh
-		_add_building(bg_far_node, bx, by, bw, bh, Color(1,1,1,0.7), 3)
+		_add_building(bg_far_node, bx, by, bw, bh, Color(LINE.r, LINE.g, LINE.b, 0.5), 3)
 
-	# 중거리: 소형 빌딩 (더 선명한 흰 라인)
+	# 중거리: 소형 빌딩 (더 선명한 앰버 라인)
 	bg_mid_node = Node2D.new()
 	add_child(bg_mid_node)
 	for i in 25:
@@ -94,7 +96,7 @@ func _build_background() -> void:
 		var bh := randi_range(120, 260)
 		var bx := i * 500 - 4000 + randi_range(-80, 80)
 		var by := GROUND_Y - bh
-		_add_building(bg_mid_node, bx, by, bw, bh, Color(1,1,1,0.9), 2)
+		_add_building(bg_mid_node, bx, by, bw, bh, Color(LINE.r, LINE.g, LINE.b, 0.85), 2)
 
 func _add_building(parent: Node2D, bx: float, by: float, bw: float, bh: float, color: Color, border: int) -> void:
 	# 외곽선 (흰색)
@@ -103,9 +105,9 @@ func _add_building(parent: Node2D, bx: float, by: float, bw: float, bh: float, c
 	outline.size = Vector2(bw, bh)
 	outline.position = Vector2(bx, by)
 	parent.add_child(outline)
-	# 내부 (검정)
+	# 내부 (흰색 — 배경과 동일)
 	var inner := ColorRect.new()
-	inner.color = Color(0.30, 0.12, 0.02)  # 다크 앰버/오렌지
+	inner.color = Color(1.0, 1.0, 1.0)
 	inner.size = Vector2(bw - border * 2, bh - border)
 	inner.position = Vector2(bx + border, by + border)
 	parent.add_child(inner)
