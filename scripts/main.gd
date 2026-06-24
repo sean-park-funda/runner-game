@@ -193,6 +193,13 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_Z and not _kicking:
+			_kicking = true
+			anim_sprite.play("kick")
+			anim_sprite.scale = scale_run
+
 func _on_kick_finished() -> void:
 	if anim_sprite.animation == "kick":
 		_kicking = false
@@ -255,12 +262,6 @@ func _physics_process(delta: float) -> void:
 	elif dir > 0:
 		anim_sprite.flip_h = false
 		_tween_camera_offset(80)
-
-	# Z키: 발차기
-	if Input.is_key_just_pressed(KEY_Z) and not _kicking:
-		_kicking = true
-		anim_sprite.play("kick")
-		anim_sprite.scale = scale_run
 
 	_is_running = dir != 0 and not _kicking
 
