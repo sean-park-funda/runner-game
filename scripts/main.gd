@@ -16,8 +16,9 @@ var bg_mid_node: Node2D    # 중거리 빌딩 — 중간
 var bg_road_node: Node2D   # 도로 마킹 — 고속 (건물의 5배)
 var _prev_cam_x: float = 0.0  # 이전 프레임 카메라 실제 X
 var _cam_tween: Tween         # 카메라 offset 부드럽게 전환
-var _is_running: bool = false  # 달리는 중 여부 (배경 속도 배율용)
-var _kicking: bool = false     # 발차기 중 (완료까지 다른 애니 차단)
+var _is_running: bool = false   # 달리는 중 여부 (배경 속도 배율용)
+var _kicking: bool = false      # 발차기 중 (완료까지 다른 애니 차단)
+var _jump_pending: bool = false # 크라우치 준비 중 (6프레임 후 실제 점프)
 
 # ── 물리 상수 (에디터에서 바꾸고 싶으면 @export 추가) ──
 const GRAVITY       = 1400.0
@@ -297,12 +298,20 @@ func _physics_process(delta: float) -> void:
 	else:
 		player.velocity.y = 0.0
 
-	# 점프
-	if player.is_on_floor() and (
+	# 점프 입력 → 크라우치 애니 시작 (아직 y 이동 없음)
+	if player.is_on_floor() and not _jump_pending and not _kicking and (
 		Input.is_action_just_pressed("ui_up") or
 		Input.is_action_just_pressed("ui_accept")
 	):
+		_jump_pending = true
+		anim_sprite.play("jump")
+		anim_sprite.scale = scale_idle
+		anim_sprite.speed_scale = 1.0
+
+	# 6번째 프레임(0-indexed=6)에서 실제 점프 발동
+	if _jump_pending and player.is_on_floor() and anim_sprite.frame >= 6:
 		player.velocity.y = JUMP_VELOCITY
+		_jump_pending = false
 
 	# 좌우 이동
 	var dir := Input.get_axis("ui_left", "ui_right")
@@ -319,12 +328,12 @@ func _physics_process(delta: float) -> void:
 		anim_sprite.flip_h = false
 		_tween_camera_offset(80)
 
-	_is_running = dir != 0 and not _kicking
+	_is_running = dir != 0 and not _kicking and not _jump_pending
 
-	# 발차기 중이면 애니 전환 차단
-	if not _kicking:
+	# 발차기 / 점프 준비 중이면 애니 전환 차단
+	if not _kicking and not _jump_pending:
 		if not player.is_on_floor():
-			# 공중: 점프 애니
+			# 공중: 점프 애니 (준비 후 이미 재생 중이면 그대로 유지)
 			if anim_sprite.animation != "jump":
 				anim_sprite.play("jump")
 				anim_sprite.scale = scale_idle
