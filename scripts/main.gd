@@ -53,7 +53,7 @@ func _process(_delta: float) -> void:
 	# 빌딩(중거리): 화면 70% 스크롤 / 달릴때 90%
 	var mid_factor := 0.10 if _is_running else 0.30
 	# 도로 마킹: 화면 95% 스크롤 (건물 대비 ~5배 빠름)
-	var road_factor := 0.05
+	var road_factor := -1.85  # 카메라 속도의 2.85배로 대시가 역방향 질주
 	if bg_far_node:
 		bg_far_node.position.x += dx * far_factor
 	if bg_mid_node:
