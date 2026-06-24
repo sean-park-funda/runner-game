@@ -36,6 +36,7 @@ const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
 func _ready() -> void:
 	_build_background()
 	_build_ground()
+	_build_road_markings()  # ground 다음 — 도로 위에 렌더링
 	_build_player()
 	_build_ui()
 	_prev_cam_x = player.position.x  # 첫 프레임 점프 방지
@@ -90,27 +91,6 @@ func _build_background() -> void:
 		var bx := i * 500 - 4000 + randi_range(-80, 80)
 		var by := GROUND_Y - bh
 		_add_building(bg_mid_node, bx, by, bw, bh, Color(1,1,1,0.9), 2)
-
-	# 도로 마킹 레이어 (고속 스크롤 — 속도감)
-	bg_road_node = Node2D.new()
-	add_child(bg_road_node)
-
-	# 차선 구성: 상단/중앙/하단 3열
-	var dash_w    := 140   # 긴 대시
-	var gap_w     := 60
-	var lane_defs := [
-		{ "y": GROUND_Y + 20,  "alpha": 0.90, "h": 5 },  # 상단 차선 (캐릭터 발 바로 아래)
-		{ "y": GROUND_Y + 55,  "alpha": 0.60, "h": 4 },  # 중앙 차선
-		{ "y": GROUND_Y + 90,  "alpha": 0.30, "h": 3 },  # 하단 차선 (원근감)
-	]
-	var dash_count := 150
-	for lane in lane_defs:
-		for i in dash_count:
-			var dash := ColorRect.new()
-			dash.color = Color(1, 1, 1, lane["alpha"])
-			dash.size = Vector2(dash_w, lane["h"])
-			dash.position = Vector2(i * (dash_w + gap_w) - 10000.0, lane["y"])
-			bg_road_node.add_child(dash)
 
 func _add_building(parent: Node2D, bx: float, by: float, bw: float, bh: float, color: Color, border: int) -> void:
 	# 외곽선 (흰색)
@@ -170,6 +150,28 @@ func _build_ground() -> void:
 	col.shape = rect
 	col.position = Vector2(0, GROUND_Y + 20)
 	body.add_child(col)
+
+# ── 도로 마킹 (ground 위에 렌더링) ──────────────────────────
+func _build_road_markings() -> void:
+	bg_road_node = Node2D.new()
+	add_child(bg_road_node)
+
+	# 3열 차선 — 짧은 대시+큰 간격으로 속도감 극대화
+	var dash_w    := 90    # 짧은 대시 (간격이 크면 더 빠르게 느껴짐)
+	var gap_w     := 130
+	var lane_defs := [
+		{ "y": GROUND_Y + 18,  "alpha": 1.0,  "h": 8 },  # 상단 (선명)
+		{ "y": GROUND_Y + 52,  "alpha": 0.65, "h": 6 },  # 중앙
+		{ "y": GROUND_Y + 88,  "alpha": 0.35, "h": 4 },  # 하단 (원근감)
+	]
+	var dash_count := 200
+	for lane in lane_defs:
+		for i in dash_count:
+			var dash := ColorRect.new()
+			dash.color = Color(1, 1, 1, lane["alpha"])
+			dash.size = Vector2(dash_w, lane["h"])
+			dash.position = Vector2(i * (dash_w + gap_w) - 12000.0, lane["y"])
+			bg_road_node.add_child(dash)
 
 # ── 플레이어 ───────────────────────────────────────────────
 func _build_player() -> void:
