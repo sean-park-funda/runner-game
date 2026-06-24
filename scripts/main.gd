@@ -270,7 +270,7 @@ func _load_sprite_sheet() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_Z and not _kicking:
+		if event.keycode == KEY_SPACE and not _kicking:
 			_kicking = true
 			anim_sprite.play("kick")
 			anim_sprite.scale = Vector2(2.5, 2.5)
@@ -304,7 +304,7 @@ func _build_ui() -> void:
 	canvas.add_child(info_label)
 
 	var hint := Label.new()
-	hint.text = "← → 이동   ↑ / Space 점프   Shift 스프린트   Z 발차기"
+	hint.text = "← → 이동   ↑ 점프   Shift 스프린트   Space 발차기"
 	hint.position = Vector2(20, 690)
 	hint.add_theme_font_size_override("font_size", 20)
 	hint.add_theme_color_override("font_color", Color(0.15, 0.15, 0.15))
@@ -321,10 +321,8 @@ func _physics_process(delta: float) -> void:
 		player.velocity.y = 0.0
 
 	# 점프 입력 → 크라우치 애니 시작 (아직 y 이동 없음)
-	if player.is_on_floor() and not _jump_pending and not _kicking and (
-		Input.is_action_just_pressed("ui_up") or
-		Input.is_action_just_pressed("ui_accept")
-	):
+	if player.is_on_floor() and not _jump_pending and not _kicking and \
+		Input.is_action_just_pressed("ui_up"):
 		_jump_pending = true
 		anim_sprite.play("jump")
 		anim_sprite.scale = scale_idle
