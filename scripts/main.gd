@@ -18,13 +18,14 @@ var _prev_cam_x: float = 0.0  # 이전 프레임 카메라 실제 X
 var _cam_tween: Tween         # 카메라 offset 부드럽게 전환
 var _is_running: bool = false   # 달리는 중 여부 (배경 속도 배율용)
 var _kicking: bool = false      # 발차기 중 (완료까지 다른 애니 차단)
-var _jump_pending: bool = false # 크라우치 준비 중 (6프레임 후 실제 점프)
+var _jump_pending: bool = false  # 크라우치 준비 중 (6프레임 후 실제 점프)
+var _was_airborne: bool = false  # 착지 감지용
 
 # ── 물리 상수 (에디터에서 바꾸고 싶으면 @export 추가) ──
 const GRAVITY       = 1400.0
 const SPEED         = 340.0
 const SPRINT_SPEED  = 600.0
-const JUMP_VELOCITY = -680.0
+const JUMP_VELOCITY = -350.0  # 12FPS × 6프레임 공중 = 0.5s → v = g*0.25 = 350
 const RUN_FRAMES    = 7      # run.png 프레임 수
 const IDLE_FRAMES   = 24     # idle.png 프레임 수 (512px HD, 24프레임)
 const KICK_FRAMES   = 9      # kick.png 프레임 수
@@ -319,6 +320,13 @@ func _physics_process(delta: float) -> void:
 	player.velocity.x = dir * spd
 
 	player.move_and_slide()
+
+	# 착지 감지 → jump 애니 13번 프레임(index 12)으로 스냅
+	var is_on_floor_now := player.is_on_floor()
+	if anim_sprite.animation == "jump" and not _jump_pending:
+		if _was_airborne and is_on_floor_now and anim_sprite.frame < 12:
+			anim_sprite.frame = 12
+	_was_airborne = not is_on_floor_now
 
 	# 스프라이트 방향 + 카메라 offset 부드럽게 전환
 	if dir < 0:
