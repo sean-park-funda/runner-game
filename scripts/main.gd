@@ -67,7 +67,7 @@ func _build_background() -> void:
 	canvas.layer = -10
 	add_child(canvas)
 	var sky := ColorRect.new()
-	sky.color = Color(0.04, 0.04, 0.07)
+	sky.color = Color(0.10, 0.03, 0.03)  # 다크 버건디
 	sky.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	canvas.add_child(sky)
 
@@ -113,7 +113,7 @@ func _add_building(parent: Node2D, bx: float, by: float, bw: float, bh: float, c
 	parent.add_child(outline)
 	# 내부 (검정)
 	var inner := ColorRect.new()
-	inner.color = Color(0.04, 0.04, 0.07)
+	inner.color = Color(0.10, 0.03, 0.03)
 	inner.size = Vector2(bw - border * 2, bh - border)
 	inner.position = Vector2(bx + border, by + border)
 	parent.add_child(inner)
@@ -136,7 +136,7 @@ func _add_building(parent: Node2D, bx: float, by: float, bw: float, bh: float, c
 func _build_ground() -> void:
 	# 누아르 도로 (아스팔트)
 	var road := ColorRect.new()
-	road.color = Color(0.12, 0.12, 0.14)
+	road.color = Color(0.14, 0.06, 0.06)  # 버건디 틴트 아스팔트
 	road.size = Vector2(WORLD_WIDTH, 300)
 	road.position = Vector2(-WORLD_WIDTH / 2, GROUND_Y)
 	add_child(road)
