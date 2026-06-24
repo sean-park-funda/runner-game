@@ -293,20 +293,24 @@ func _input(event: InputEvent) -> void:
 			_kicking = true
 			anim_sprite.play("kick")
 			anim_sprite.scale = Vector2(2.5, 2.5)
+			anim_sprite.position.y = -60
 		elif kc == KEY_X and not _kicking and not _punching:
 			_punching = true
 			anim_sprite.play("punch")
 			anim_sprite.scale = scale_punch
+			anim_sprite.position.y = -60
 
 func _on_kick_finished() -> void:
 	if anim_sprite.animation == "kick":
 		_kicking = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_idle
+		anim_sprite.position.y = -60
 	elif anim_sprite.animation == "punch":
 		_punching = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_idle
+		anim_sprite.position.y = -60
 	elif anim_sprite.animation == "jump":
 		_landing = false
 		anim_sprite.play("idle")
@@ -389,20 +393,22 @@ func _physics_process(delta: float) -> void:
 	# 발차기 / 펀치 / 점프 준비 / 착지 recovery 중이면 애니 전환 차단
 	if not _kicking and not _punching and not _jump_pending and not _landing:
 		if not player.is_on_floor():
-			# 공중: 점프 애니 (준비 후 이미 재생 중이면 그대로 유지)
 			if anim_sprite.animation != "jump":
 				anim_sprite.play("jump")
 				anim_sprite.scale = scale_idle
+				anim_sprite.position.y = -60
 		elif dir != 0:
 			if anim_sprite.animation != "run":
 				anim_sprite.play("run")
 				anim_sprite.scale = scale_run
+				anim_sprite.position.y = -23  # run 스프라이트 캐릭터가 프레임 상단에 치우쳐 발 위치 보정
 			var spd_ratio: float = abs(player.velocity.x) / SPEED
 			anim_sprite.speed_scale = max(0.6, spd_ratio)
 		else:
 			if anim_sprite.animation != "idle":
 				anim_sprite.play("idle")
 				anim_sprite.scale = scale_idle
+				anim_sprite.position.y = -60
 			anim_sprite.speed_scale = 1.0
 
 	# UI 업데이트
