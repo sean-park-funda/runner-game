@@ -135,7 +135,7 @@ func _build_player() -> void:
 	camera = Camera2D.new()
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 6.0
-	camera.offset = Vector2(80, 80)   # 캐릭터를 화면 중상단에 배치
+	camera.offset = Vector2(80, -150)  # 캐릭터 위주, 땅이 화면 하단에 오도록
 	player.add_child(camera)
 
 func _load_sprite_sheet() -> void:
