@@ -10,6 +10,7 @@ var info_label: Label
 var scale_idle: Vector2
 var scale_run: Vector2
 var scale_punch: Vector2
+var scale_jump: Vector2
 
 # 패럴렉스용 노드 레퍼런스
 var bg_far_node: Node2D    # 원거리 빌딩 실루엣 — 느리게
@@ -281,8 +282,9 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
 	scale_run   = Vector2(0.73, 0.73)  # 캐릭터가 프레임 95% 차지
-	scale_idle  = Vector2(0.73, 0.73)  # 새 idle도 프레임 97% 차지 → run과 동일 보정
-	scale_punch = Vector2(0.9, 0.9)    # 펀치 스프라이트 아트워크가 더 크게 그려짐
+	scale_idle  = Vector2(0.73, 0.73)  # 새 idle도 프레임 97% 차지
+	scale_jump  = Vector2(1.25, 1.25)  # jump 스프라이트는 프레임 37%만 차지 → 크게
+	scale_punch = Vector2(0.9, 0.9)
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
 
@@ -357,7 +359,8 @@ func _physics_process(delta: float) -> void:
 		Input.is_action_just_pressed("ui_up"):
 		_jump_pending = true
 		anim_sprite.play("jump")
-		anim_sprite.scale = scale_idle
+		anim_sprite.scale = scale_jump
+		anim_sprite.position.y = -60
 		anim_sprite.speed_scale = 1.0
 
 	# 6번째 프레임(0-indexed=6)에서 실제 점프 발동
@@ -396,7 +399,7 @@ func _physics_process(delta: float) -> void:
 		if not player.is_on_floor():
 			if anim_sprite.animation != "jump":
 				anim_sprite.play("jump")
-				anim_sprite.scale = scale_idle
+				anim_sprite.scale = scale_jump
 				anim_sprite.position.y = -60
 		elif dir != 0:
 			if anim_sprite.animation != "run":
