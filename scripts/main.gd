@@ -403,7 +403,7 @@ func _physics_process(delta: float) -> void:
 				anim_sprite.scale = scale_run
 				anim_sprite.position.y = -23  # run 스프라이트 캐릭터가 프레임 상단에 치우쳐 발 위치 보정
 			var spd_ratio: float = abs(player.velocity.x) / SPEED
-			anim_sprite.speed_scale = max(0.6, spd_ratio)
+			anim_sprite.speed_scale = max(0.6, spd_ratio) * 3.0
 		else:
 			if anim_sprite.animation != "idle":
 				anim_sprite.play("idle")
