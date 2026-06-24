@@ -16,6 +16,7 @@ var bg_mid_node: Node2D    # 중거리 (나무/언덕) — 중간 속도
 var _prev_cam_x: float = 0.0  # 이전 프레임 카메라 실제 X
 var _cam_tween: Tween         # 카메라 offset 부드럽게 전환
 var _is_running: bool = false  # 달리는 중 여부 (배경 속도 배율용)
+var _kicking: bool = false     # 발차기 중 (완료까지 다른 애니 차단)
 
 # ── 물리 상수 (에디터에서 바꾸고 싶으면 @export 추가) ──
 const GRAVITY       = 1400.0
@@ -24,6 +25,7 @@ const SPRINT_SPEED  = 600.0
 const JUMP_VELOCITY = -680.0
 const RUN_FRAMES    = 7      # run.png 프레임 수
 const IDLE_FRAMES   = 15     # idle.png 프레임 수
+const KICK_FRAMES   = 9      # kick.png 프레임 수
 const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
 
 func _ready() -> void:
@@ -168,7 +170,22 @@ func _load_sprite_sheet() -> void:
 		atlas.region = Rect2(i * idle_fw, 0, idle_fw, idle_fh)
 		frames.add_frame("idle", atlas)
 
+	# ── kick 애니메이션 ─────────────────────────────────────
+	var kick_tex: Texture2D = load("res://assets/sprites/kick.png")
+	var kick_img := kick_tex.get_image()
+	var kick_fw := kick_img.get_width() / KICK_FRAMES
+	var kick_fh := kick_img.get_height()
+	frames.add_animation("kick")
+	frames.set_animation_speed("kick", ANIM_FPS)
+	frames.set_animation_loop("kick", false)  # 한 번만 재생
+	for i in KICK_FRAMES:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = kick_tex
+		atlas.region = Rect2(i * kick_fw, 0, kick_fw, kick_fh)
+		frames.add_frame("kick", atlas)
+
 	anim_sprite.sprite_frames = frames
+	anim_sprite.animation_finished.connect(_on_kick_finished)
 
 	# run 기준 스케일로 통일 (run 프레임 높이 기준, idle도 동일 배율 적용)
 	var target_height := 600.0
@@ -176,6 +193,12 @@ func _load_sprite_sheet() -> void:
 	scale_idle = scale_run * 1.2
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
+
+func _on_kick_finished() -> void:
+	if anim_sprite.animation == "kick":
+		_kicking = false
+		anim_sprite.play("idle")
+		anim_sprite.scale = scale_idle
 
 func _tween_camera_offset(target_x: float) -> void:
 	if camera.offset.x == target_x: return
@@ -196,7 +219,7 @@ func _build_ui() -> void:
 	canvas.add_child(info_label)
 
 	var hint := Label.new()
-	hint.text = "← → 이동   ↑ / Space 점프   Shift 스프린트"
+	hint.text = "← → 이동   ↑ / Space 점프   Shift 스프린트   Z 발차기"
 	hint.position = Vector2(20, 690)
 	hint.add_theme_font_size_override("font_size", 20)
 	hint.add_theme_color_override("font_color", Color(0.15, 0.15, 0.15))
@@ -234,20 +257,27 @@ func _physics_process(delta: float) -> void:
 		anim_sprite.flip_h = false
 		_tween_camera_offset(80)
 
-	_is_running = dir != 0
+	# Z키: 발차기
+	if Input.is_key_just_pressed(KEY_Z) and not _kicking:
+		_kicking = true
+		anim_sprite.play("kick")
+		anim_sprite.scale = scale_run
 
-	# 애니메이션 전환: 입력값(dir)으로 판단 — velocity는 물리 처리 후 튈 수 있음
-	if dir != 0:
-		if anim_sprite.animation != "run":
-			anim_sprite.play("run")
-			anim_sprite.scale = scale_run
-		var spd_ratio: float = abs(player.velocity.x) / SPEED
-		anim_sprite.speed_scale = max(0.6, spd_ratio)
-	else:
-		if anim_sprite.animation != "idle":
-			anim_sprite.play("idle")
-			anim_sprite.scale = scale_idle
-		anim_sprite.speed_scale = 1.0
+	_is_running = dir != 0 and not _kicking
+
+	# 발차기 중이면 애니 전환 차단
+	if not _kicking:
+		if dir != 0:
+			if anim_sprite.animation != "run":
+				anim_sprite.play("run")
+				anim_sprite.scale = scale_run
+			var spd_ratio: float = abs(player.velocity.x) / SPEED
+			anim_sprite.speed_scale = max(0.6, spd_ratio)
+		else:
+			if anim_sprite.animation != "idle":
+				anim_sprite.play("idle")
+				anim_sprite.scale = scale_idle
+			anim_sprite.speed_scale = 1.0
 
 	# UI 업데이트
 	if info_label:
