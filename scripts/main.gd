@@ -28,7 +28,7 @@ const JUMP_VELOCITY = -680.0
 const RUN_FRAMES    = 7      # run.png 프레임 수
 const IDLE_FRAMES   = 24     # idle.png 프레임 수 (512px HD, 24프레임)
 const KICK_FRAMES   = 9      # kick.png 프레임 수
-const JUMP_FRAMES   = 15     # jump.png 프레임 수
+const JUMP_FRAMES   = 17     # jump.png 프레임 수 (512px HD, 17프레임)
 const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
 
 func _ready() -> void:
