@@ -9,6 +9,7 @@ var camera: Camera2D
 var info_label: Label
 var scale_idle: Vector2
 var scale_run: Vector2
+var scale_punch: Vector2
 
 # 패럴렉스용 노드 레퍼런스
 var bg_far_node: Node2D    # 원거리 빌딩 실루엣 — 느리게
@@ -279,8 +280,9 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.sprite_frames = frames
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
-	scale_run  = Vector2(1.25, 1.25)  # HD 512px
-	scale_idle = Vector2(1.25, 1.25)  # HD(512px) → 256px 시절의 절반 스케일로 동일 크기
+	scale_run   = Vector2(1.25, 1.25)  # HD 512px
+	scale_idle  = Vector2(1.25, 1.25)  # HD 512px
+	scale_punch = Vector2(0.9, 0.9)    # 펀치 스프라이트 아트워크가 더 크게 그려짐
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
 
@@ -294,7 +296,7 @@ func _input(event: InputEvent) -> void:
 		elif kc == KEY_X and not _kicking and not _punching:
 			_punching = true
 			anim_sprite.play("punch")
-			anim_sprite.scale = scale_idle  # HD 512px
+			anim_sprite.scale = scale_punch
 
 func _on_kick_finished() -> void:
 	if anim_sprite.animation == "kick":
