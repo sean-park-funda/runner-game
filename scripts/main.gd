@@ -360,8 +360,8 @@ func _physics_process(delta: float) -> void:
 		player.velocity.y = JUMP_VELOCITY
 		_jump_pending = false
 
-	# 좌우 이동
-	var dir := Input.get_axis("ui_left", "ui_right")
+	# 좌우 이동 (킥/펀치 중 차단)
+	var dir := 0.0 if (_kicking or _punching) else Input.get_axis("ui_left", "ui_right")
 	var spd := SPRINT_SPEED if Input.is_action_pressed("ui_focus_next") else SPEED
 	player.velocity.x = dir * spd
 
