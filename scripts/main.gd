@@ -7,11 +7,7 @@ var player: CharacterBody2D
 var anim_sprite: AnimatedSprite2D
 var camera: Camera2D
 var info_label: Label
-var scale_idle: Vector2
-var scale_run: Vector2
-var scale_jab: Vector2
-var scale_punch: Vector2
-var scale_jump: Vector2
+var scale_char: Vector2  # 모든 애니메이션 공통 (bbox 통일됨)
 
 # 패럴렉스용 노드 레퍼런스
 var bg_far_node: Node2D    # 원거리 빌딩 실루엣 — 느리게
@@ -35,7 +31,7 @@ const GRAVITY       = 1400.0
 const SPEED         = 340.0
 const SPRINT_SPEED  = 600.0
 const JUMP_VELOCITY = -350.0  # 12FPS × 6프레임 공중 = 0.5s → v = g*0.25 = 350
-const RUN_FRAMES    = 18     # run.png 프레임 수
+const RUN_FRAMES    = 97     # run.png 프레임 수
 const IDLE_FRAMES   = 24     # idle.png 프레임 수 (512px HD, 24프레임)
 const KICK_FRAMES         = 12     # kick.png 프레임 수
 const JUMP_FRAMES         = 17     # jump.png 프레임 수 (512px HD, 17프레임)
@@ -304,12 +300,8 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.sprite_frames = frames
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
-	scale_run   = Vector2(0.73, 0.73)
-	scale_idle  = Vector2(0.73, 0.73)
-	scale_jump  = Vector2(1.25, 1.25)
-	scale_jab   = Vector2(0.75, 0.75)
-	scale_punch = Vector2(0.9, 0.9)
-	anim_sprite.scale = scale_idle
+	scale_char = Vector2(0.73, 0.73)  # bbox 통일로 모든 애니 동일 scale
+	anim_sprite.scale = scale_char
 	anim_sprite.play("idle")
 
 func _input(event: InputEvent) -> void:
@@ -320,7 +312,7 @@ func _input(event: InputEvent) -> void:
 		elif kc == KEY_Z and not _kicking and not _jabbing and not _combo_punching:
 			_kicking = true
 			anim_sprite.play("kick")
-			anim_sprite.scale = Vector2(0.84, 0.84)
+			anim_sprite.scale = scale_char
 			anim_sprite.position.y = -23
 		elif kc == KEY_X and not _kicking and not _combo_punching:
 			# 연타 카운트 갱신
@@ -336,35 +328,35 @@ func _input(event: InputEvent) -> void:
 				_jabbing = false
 				_combo_punching = true
 				anim_sprite.play("combo_punch")
-				anim_sprite.scale = scale_punch
-				anim_sprite.position.y = -60
+				anim_sprite.scale = scale_char
+				anim_sprite.position.y = -23
 			else:
 				# 잽 (재)시작
 				_jabbing = true
 				anim_sprite.play("jab")
-				anim_sprite.scale = scale_jab
+				anim_sprite.scale = scale_char
 				anim_sprite.position.y = -23
 
 func _on_kick_finished() -> void:
 	if anim_sprite.animation == "kick":
 		_kicking = false
 		anim_sprite.play("idle")
-		anim_sprite.scale = scale_idle
+		anim_sprite.scale = scale_char
 		anim_sprite.position.y = -23
 	elif anim_sprite.animation == "jab":
 		_jabbing = false
 		anim_sprite.play("idle")
-		anim_sprite.scale = scale_idle
+		anim_sprite.scale = scale_char
 		anim_sprite.position.y = -23
 	elif anim_sprite.animation == "combo_punch":
 		_combo_punching = false
 		anim_sprite.play("idle")
-		anim_sprite.scale = scale_idle
+		anim_sprite.scale = scale_char
 		anim_sprite.position.y = -23
 	elif anim_sprite.animation == "jump":
 		_landing = false
 		anim_sprite.play("idle")
-		anim_sprite.scale = scale_idle
+		anim_sprite.scale = scale_char
 		anim_sprite.position.y = -23
 
 func _tween_camera_offset(target_x: float) -> void:
@@ -414,8 +406,8 @@ func _physics_process(delta: float) -> void:
 	if player.is_on_floor() and not _jump_pending and not _kicking and not _jabbing and not _combo_punching and _do_jump:
 		_jump_pending = true
 		anim_sprite.play("jump")
-		anim_sprite.scale = scale_jump
-		anim_sprite.position.y = -60
+		anim_sprite.scale = scale_char
+		anim_sprite.position.y = -23
 		anim_sprite.speed_scale = 1.0
 
 	# 6번째 프레임(0-indexed=6)에서 실제 점프 발동
@@ -453,20 +445,20 @@ func _physics_process(delta: float) -> void:
 		if not player.is_on_floor():
 			if anim_sprite.animation != "jump":
 				anim_sprite.play("jump")
-				anim_sprite.scale = scale_jump
-				anim_sprite.position.y = -60
+				anim_sprite.scale = scale_char
+				anim_sprite.position.y = -23
 		elif dir != 0:
 			if anim_sprite.animation != "run":
 				anim_sprite.play("run")
-				anim_sprite.scale = scale_run
-				anim_sprite.position.y = -23  # run 스프라이트 캐릭터가 프레임 상단에 치우쳐 발 위치 보정
+				anim_sprite.scale = scale_char
+				anim_sprite.position.y = -23
 			var spd_ratio: float = abs(player.velocity.x) / SPEED
 			anim_sprite.speed_scale = max(0.6, spd_ratio) * 3.0
 		else:
 			if anim_sprite.animation != "idle":
 				anim_sprite.play("idle")
-				anim_sprite.scale = scale_idle
-				anim_sprite.position.y = -23  # 새 idle도 프레임 상단에 치우침
+				anim_sprite.scale = scale_char
+				anim_sprite.position.y = -23
 			anim_sprite.speed_scale = 1.0
 
 	# UI 업데이트
