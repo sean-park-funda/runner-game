@@ -31,11 +31,11 @@ const GRAVITY       = 1400.0
 const SPEED         = 340.0
 const SPRINT_SPEED  = 600.0
 const JUMP_VELOCITY = -350.0  # 12FPS × 6프레임 공중 = 0.5s → v = g*0.25 = 350
-const RUN_FRAMES    = 14     # run.png 프레임 수
+const RUN_FRAMES    = 19     # run.png 프레임 수
 const IDLE_FRAMES   = 24     # idle.png 프레임 수 (512px HD, 24프레임)
 const KICK_FRAMES         = 12     # kick.png 프레임 수
 const JUMP_FRAMES         = 17     # jump.png 프레임 수 (512px HD, 17프레임)
-const JAB_FRAMES          = 10     # jab.png 프레임 수
+const JAB_FRAMES          = 9      # jab.png 프레임 수
 const COMBO_PUNCH_FRAMES  = 44     # combo_punch.png 프레임 수
 const JAB_WINDOW          = 0.6    # 연속 클릭 인식 시간(초)
 const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
