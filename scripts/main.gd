@@ -9,6 +9,7 @@ var camera: Camera2D
 var info_label: Label
 var scale_idle: Vector2
 var scale_run: Vector2
+var scale_jab: Vector2
 var scale_punch: Vector2
 var scale_jump: Vector2
 
@@ -19,10 +20,13 @@ var bg_road_node: Node2D   # 도로 마킹 — 고속 (건물의 5배)
 var _prev_cam_x: float = 0.0  # 이전 프레임 카메라 실제 X
 var _cam_tween: Tween         # 카메라 offset 부드럽게 전환
 var _is_running: bool = false   # 달리는 중 여부 (배경 속도 배율용)
-var _kicking: bool = false      # 발차기 중 (완료까지 다른 애니 차단)
-var _punching: bool = false     # 연속펀치 중 (완료까지 다른 애니 차단)
-var _jump_pending: bool = false  # 크라우치 준비 중 (6프레임 후 실제 점프)
-var _jump_input: bool = false    # 스페이스 점프 입력 플래그
+var _kicking: bool = false          # 발차기 중
+var _jabbing: bool = false          # 잽 중
+var _combo_punching: bool = false   # 연속펀치 중
+var _x_press_count: int = 0         # X 연타 카운트
+var _x_press_timer: float = 0.0     # 연타 인식 타이머
+var _jump_pending: bool = false      # 크라우치 준비 중 (6프레임 후 실제 점프)
+var _jump_input: bool = false        # 스페이스 점프 입력 플래그
 var _was_airborne: bool = false  # 착지 감지용
 var _landing: bool = false       # 착지 후 recovery 모션 재생 중
 
@@ -33,9 +37,11 @@ const SPRINT_SPEED  = 600.0
 const JUMP_VELOCITY = -350.0  # 12FPS × 6프레임 공중 = 0.5s → v = g*0.25 = 350
 const RUN_FRAMES    = 18     # run.png 프레임 수
 const IDLE_FRAMES   = 24     # idle.png 프레임 수 (512px HD, 24프레임)
-const KICK_FRAMES   = 9      # kick.png 프레임 수
-const JUMP_FRAMES   = 17     # jump.png 프레임 수 (512px HD, 17프레임)
-const PUNCH_FRAMES  = 44     # punch.png 프레임 수
+const KICK_FRAMES         = 9      # kick.png 프레임 수
+const JUMP_FRAMES         = 17     # jump.png 프레임 수 (512px HD, 17프레임)
+const JAB_FRAMES          = 10     # jab.png 프레임 수
+const COMBO_PUNCH_FRAMES  = 44     # combo_punch.png 프레임 수
+const JAB_WINDOW          = 0.6    # 연속 클릭 인식 시간(초)
 const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
 
 func _ready() -> void:
@@ -267,26 +273,41 @@ func _load_sprite_sheet() -> void:
 		atlas.region = Rect2(i * jump_fw, 0, jump_fw, jump_fh)
 		frames.add_frame("jump", atlas)
 
-	# ── punch 애니메이션 ────────────────────────────────────
-	var punch_tex: Texture2D = load("res://assets/sprites/punch.png")
-	var punch_img := punch_tex.get_image()
-	var punch_fw := punch_img.get_width() / PUNCH_FRAMES
-	var punch_fh := punch_img.get_height()
-	frames.add_animation("punch")
-	frames.set_animation_speed("punch", ANIM_FPS)
-	frames.set_animation_loop("punch", false)
-	for i in PUNCH_FRAMES:
+	# ── jab 애니메이션 ──────────────────────────────────────
+	var jab_tex: Texture2D = load("res://assets/sprites/jab.png")
+	var jab_img := jab_tex.get_image()
+	var jab_fw := jab_img.get_width() / JAB_FRAMES
+	var jab_fh := jab_img.get_height()
+	frames.add_animation("jab")
+	frames.set_animation_speed("jab", ANIM_FPS)
+	frames.set_animation_loop("jab", false)
+	for i in JAB_FRAMES:
 		var atlas := AtlasTexture.new()
-		atlas.atlas = punch_tex
-		atlas.region = Rect2(i * punch_fw, 0, punch_fw, punch_fh)
-		frames.add_frame("punch", atlas)
+		atlas.atlas = jab_tex
+		atlas.region = Rect2(i * jab_fw, 0, jab_fw, jab_fh)
+		frames.add_frame("jab", atlas)
+
+	# ── combo_punch 애니메이션 ───────────────────────────────
+	var cp_tex: Texture2D = load("res://assets/sprites/combo_punch.png")
+	var cp_img := cp_tex.get_image()
+	var cp_fw := cp_img.get_width() / COMBO_PUNCH_FRAMES
+	var cp_fh := cp_img.get_height()
+	frames.add_animation("combo_punch")
+	frames.set_animation_speed("combo_punch", ANIM_FPS)
+	frames.set_animation_loop("combo_punch", false)
+	for i in COMBO_PUNCH_FRAMES:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = cp_tex
+		atlas.region = Rect2(i * cp_fw, 0, cp_fw, cp_fh)
+		frames.add_frame("combo_punch", atlas)
 
 	anim_sprite.sprite_frames = frames
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
-	scale_run   = Vector2(0.73, 0.73)  # 캐릭터가 프레임 95% 차지
-	scale_idle  = Vector2(0.73, 0.73)  # 새 idle도 프레임 97% 차지
-	scale_jump  = Vector2(1.25, 1.25)  # jump 스프라이트는 프레임 37%만 차지 → 크게
+	scale_run   = Vector2(0.73, 0.73)
+	scale_idle  = Vector2(0.73, 0.73)
+	scale_jump  = Vector2(1.25, 1.25)
+	scale_jab   = Vector2(0.75, 0.75)
 	scale_punch = Vector2(0.9, 0.9)
 	anim_sprite.scale = scale_idle
 	anim_sprite.play("idle")
@@ -294,18 +315,35 @@ func _load_sprite_sheet() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		var kc: int = event.physical_keycode
-		if kc == KEY_SPACE and not _kicking and not _punching:
+		if kc == KEY_SPACE and not _kicking and not _jabbing and not _combo_punching:
 				_jump_input = true
-		elif kc == KEY_Z and not _kicking and not _punching:
+		elif kc == KEY_Z and not _kicking and not _jabbing and not _combo_punching:
 			_kicking = true
 			anim_sprite.play("kick")
 			anim_sprite.scale = Vector2(2.5, 2.5)
 			anim_sprite.position.y = -60
-		elif kc == KEY_X and not _kicking and not _punching:
-			_punching = true
-			anim_sprite.play("punch")
-			anim_sprite.scale = scale_punch
-			anim_sprite.position.y = -60
+		elif kc == KEY_X and not _kicking and not _combo_punching:
+			# 연타 카운트 갱신
+			if _x_press_timer > 0.0:
+				_x_press_count += 1
+			else:
+				_x_press_count = 1
+			_x_press_timer = JAB_WINDOW
+			if _x_press_count >= 3:
+				# 연속펀치 발동
+				_x_press_count = 0
+				_x_press_timer = 0.0
+				_jabbing = false
+				_combo_punching = true
+				anim_sprite.play("combo_punch")
+				anim_sprite.scale = scale_punch
+				anim_sprite.position.y = -60
+			else:
+				# 잽 (재)시작
+				_jabbing = true
+				anim_sprite.play("jab")
+				anim_sprite.scale = scale_jab
+				anim_sprite.position.y = -23
 
 func _on_kick_finished() -> void:
 	if anim_sprite.animation == "kick":
@@ -313,8 +351,13 @@ func _on_kick_finished() -> void:
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_idle
 		anim_sprite.position.y = -23
-	elif anim_sprite.animation == "punch":
-		_punching = false
+	elif anim_sprite.animation == "jab":
+		_jabbing = false
+		anim_sprite.play("idle")
+		anim_sprite.scale = scale_idle
+		anim_sprite.position.y = -23
+	elif anim_sprite.animation == "combo_punch":
+		_combo_punching = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_idle
 		anim_sprite.position.y = -23
@@ -343,7 +386,7 @@ func _build_ui() -> void:
 	canvas.add_child(info_label)
 
 	var hint := Label.new()
-	hint.text = "← → 이동   ↑/Space 점프   Shift 스프린트   Z 발차기   X 연속펀치"
+	hint.text = "← → 이동   ↑/Space 점프   Shift 스프린트   Z 발차기   X 잽 / XXX 연속펀치"
 	hint.position = Vector2(20, 690)
 	hint.add_theme_font_size_override("font_size", 20)
 	hint.add_theme_color_override("font_color", Color(0.15, 0.15, 0.15))
@@ -360,6 +403,12 @@ func _physics_process(delta: float) -> void:
 		player.velocity.y = 0.0
 
 	# 점프 입력 → 크라우치 애니 시작 (아직 y 이동 없음)
+	# X 연타 타이머
+	if _x_press_timer > 0.0:
+		_x_press_timer -= delta
+		if _x_press_timer <= 0.0:
+			_x_press_count = 0
+
 	var _do_jump := Input.is_action_just_pressed("ui_up") or _jump_input
 	_jump_input = false
 	if player.is_on_floor() and not _jump_pending and not _kicking and not _punching and _do_jump:
@@ -375,7 +424,7 @@ func _physics_process(delta: float) -> void:
 		_jump_pending = false
 
 	# 좌우 이동 (킥/펀치 중 차단)
-	var dir := 0.0 if (_kicking or _punching) else Input.get_axis("ui_left", "ui_right")
+	var dir := 0.0 if (_kicking or _jabbing or _combo_punching) else Input.get_axis("ui_left", "ui_right")
 	var spd := SPRINT_SPEED if Input.is_action_pressed("ui_focus_next") else SPEED
 	player.velocity.x = dir * spd
 
@@ -397,10 +446,10 @@ func _physics_process(delta: float) -> void:
 		anim_sprite.flip_h = false
 		_tween_camera_offset(80)
 
-	_is_running = dir != 0 and not _kicking and not _punching and not _jump_pending and not _landing
+	_is_running = dir != 0 and not _kicking and not _jabbing and not _combo_punching and not _jump_pending and not _landing
 
-	# 발차기 / 펀치 / 점프 준비 / 착지 recovery 중이면 애니 전환 차단
-	if not _kicking and not _punching and not _jump_pending and not _landing:
+	# 발차기 / 잽 / 연속펀치 / 점프 준비 / 착지 recovery 중이면 애니 전환 차단
+	if not _kicking and not _jabbing and not _combo_punching and not _jump_pending and not _landing:
 		if not player.is_on_floor():
 			if anim_sprite.animation != "jump":
 				anim_sprite.play("jump")
