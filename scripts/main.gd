@@ -300,7 +300,7 @@ func _load_sprite_sheet() -> void:
 	anim_sprite.sprite_frames = frames
 	anim_sprite.animation_finished.connect(_on_kick_finished)
 
-	scale_char = Vector2(0.73, 0.73)  # bbox 통일로 모든 애니 동일 scale
+	scale_char = Vector2(1.095, 1.095)  # 0.73 * 1.5
 	anim_sprite.scale = scale_char
 	anim_sprite.play("idle")
 
