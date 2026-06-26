@@ -18,7 +18,8 @@ var _cam_tween: Tween         # 카메라 offset 부드럽게 전환
 var _is_running: bool = false   # 달리는 중 여부 (배경 속도 배율용)
 var _kicking: bool = false          # 발차기 중
 var _jabbing: bool = false          # 잽 중
-var _one_two_ing: bool = false      # 원투 중
+var _one_two_ing: bool = false          # 원투 중
+var _one_two_chain_timer: float = 0.0  # 원투 종료 후 체인 윈도우
 var _combo_punching: bool = false   # 연속펀치 중
 var _x_press_count: int = 0         # X 연타 카운트
 var _x_press_timer: float = 0.0     # 연타 인식 타이머
@@ -39,7 +40,8 @@ const JUMP_FRAMES         = 32     # jump.png 프레임 수
 const JAB_FRAMES          = 9      # jab.png 프레임 수
 const ONE_TWO_FRAMES      = 19     # one_two.png 프레임 수
 const COMBO_PUNCH_FRAMES  = 44     # combo_punch.png 프레임 수
-const JAB_WINDOW          = 0.2    # 연속 클릭 인식 시간(초)
+const JAB_WINDOW              = 0.2    # 연속 클릭 인식 시간(초)
+const ONE_TWO_CHAIN_WINDOW    = 0.5    # 원투 후 연속펀치 체인 허용 시간(초)
 const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
 
 func _ready() -> void:
@@ -347,12 +349,18 @@ func _input(event: InputEvent) -> void:
 				anim_sprite.scale = scale_char
 				anim_sprite.position.y = -173
 			elif _x_press_count == 2:
-				# 원투 발동
 				_x_press_count = 0
 				_x_press_timer = 0.0
 				_jabbing = false
-				_one_two_ing = true
-				anim_sprite.play("one_two")
+				if _one_two_chain_timer > 0.0:
+					# 원투 체인 → 연속펀치
+					_one_two_chain_timer = 0.0
+					_combo_punching = true
+					anim_sprite.play("combo_punch")
+				else:
+					# 원투 발동
+					_one_two_ing = true
+					anim_sprite.play("one_two")
 				anim_sprite.scale = scale_char
 				anim_sprite.position.y = -173
 			else:
@@ -375,6 +383,7 @@ func _on_kick_finished() -> void:
 		anim_sprite.position.y = -173
 	elif anim_sprite.animation == "one_two":
 		_one_two_ing = false
+		_one_two_chain_timer = ONE_TWO_CHAIN_WINDOW  # 체인 윈도우 오픈
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_char
 		anim_sprite.position.y = -173
@@ -430,6 +439,8 @@ func _physics_process(delta: float) -> void:
 		_x_press_timer -= delta
 		if _x_press_timer <= 0.0:
 			_x_press_count = 0
+	if _one_two_chain_timer > 0.0:
+		_one_two_chain_timer -= delta
 
 	var _do_jump := Input.is_action_just_pressed("ui_up") or _jump_input
 	_jump_input = false
