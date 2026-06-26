@@ -199,7 +199,7 @@ func _build_player() -> void:
 
 	# AnimatedSprite2D + 스프라이트 시트 로딩
 	anim_sprite = AnimatedSprite2D.new()
-	anim_sprite.position = Vector2(0, -23)
+	anim_sprite.position = Vector2(0, -173)
 	player.add_child(anim_sprite)
 	_load_sprite_sheet()
 
@@ -313,7 +313,7 @@ func _input(event: InputEvent) -> void:
 			_kicking = true
 			anim_sprite.play("kick")
 			anim_sprite.scale = scale_char
-			anim_sprite.position.y = -23
+			anim_sprite.position.y = -173
 		elif kc == KEY_X and not _kicking and not _combo_punching:
 			# 연타 카운트 갱신
 			if _x_press_timer > 0.0:
@@ -329,35 +329,35 @@ func _input(event: InputEvent) -> void:
 				_combo_punching = true
 				anim_sprite.play("combo_punch")
 				anim_sprite.scale = scale_char
-				anim_sprite.position.y = -23
+				anim_sprite.position.y = -173
 			else:
 				# 잽 (재)시작
 				_jabbing = true
 				anim_sprite.play("jab")
 				anim_sprite.scale = scale_char
-				anim_sprite.position.y = -23
+				anim_sprite.position.y = -173
 
 func _on_kick_finished() -> void:
 	if anim_sprite.animation == "kick":
 		_kicking = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_char
-		anim_sprite.position.y = -23
+		anim_sprite.position.y = -173
 	elif anim_sprite.animation == "jab":
 		_jabbing = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_char
-		anim_sprite.position.y = -23
+		anim_sprite.position.y = -173
 	elif anim_sprite.animation == "combo_punch":
 		_combo_punching = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_char
-		anim_sprite.position.y = -23
+		anim_sprite.position.y = -173
 	elif anim_sprite.animation == "jump":
 		_landing = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_char
-		anim_sprite.position.y = -23
+		anim_sprite.position.y = -173
 
 func _tween_camera_offset(target_x: float) -> void:
 	if camera.offset.x == target_x: return
@@ -407,7 +407,7 @@ func _physics_process(delta: float) -> void:
 		_jump_pending = true
 		anim_sprite.play("jump")
 		anim_sprite.scale = scale_char
-		anim_sprite.position.y = -23
+		anim_sprite.position.y = -173
 		anim_sprite.speed_scale = 1.0
 
 	# 6번째 프레임(0-indexed=6)에서 실제 점프 발동
@@ -446,19 +446,19 @@ func _physics_process(delta: float) -> void:
 			if anim_sprite.animation != "jump":
 				anim_sprite.play("jump")
 				anim_sprite.scale = scale_char
-				anim_sprite.position.y = -23
+				anim_sprite.position.y = -173
 		elif dir != 0:
 			if anim_sprite.animation != "run":
 				anim_sprite.play("run")
 				anim_sprite.scale = scale_char
-				anim_sprite.position.y = -23
+				anim_sprite.position.y = -173
 			var spd_ratio: float = abs(player.velocity.x) / SPEED
 			anim_sprite.speed_scale = max(0.6, spd_ratio) * 3.0
 		else:
 			if anim_sprite.animation != "idle":
 				anim_sprite.play("idle")
 				anim_sprite.scale = scale_char
-				anim_sprite.position.y = -23
+				anim_sprite.position.y = -173
 			anim_sprite.speed_scale = 1.0
 
 	# UI 업데이트
