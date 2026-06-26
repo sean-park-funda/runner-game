@@ -18,6 +18,7 @@ var _cam_tween: Tween         # 카메라 offset 부드럽게 전환
 var _is_running: bool = false   # 달리는 중 여부 (배경 속도 배율용)
 var _kicking: bool = false          # 발차기 중
 var _jabbing: bool = false          # 잽 중
+var _one_two_ing: bool = false      # 원투 중
 var _combo_punching: bool = false   # 연속펀치 중
 var _x_press_count: int = 0         # X 연타 카운트
 var _x_press_timer: float = 0.0     # 연타 인식 타이머
@@ -36,8 +37,9 @@ const IDLE_FRAMES   = 24     # idle.png 프레임 수 (512px HD, 24프레임)
 const KICK_FRAMES         = 6      # kick.png 프레임 수
 const JUMP_FRAMES         = 32     # jump.png 프레임 수
 const JAB_FRAMES          = 9      # jab.png 프레임 수
+const ONE_TWO_FRAMES      = 19     # one_two.png 프레임 수
 const COMBO_PUNCH_FRAMES  = 44     # combo_punch.png 프레임 수
-const JAB_WINDOW          = 0.6    # 연속 클릭 인식 시간(초)
+const JAB_WINDOW          = 0.4    # 연속 클릭 인식 시간(초)
 const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
 
 func _ready() -> void:
@@ -283,6 +285,20 @@ func _load_sprite_sheet() -> void:
 		atlas.region = Rect2(i * jab_fw, 0, jab_fw, jab_fh)
 		frames.add_frame("jab", atlas)
 
+	# ── one_two 애니메이션 ──────────────────────────────────
+	var ot_tex: Texture2D = load("res://assets/sprites/one_two.png")
+	var ot_img := ot_tex.get_image()
+	var ot_fw := ot_img.get_width() / ONE_TWO_FRAMES
+	var ot_fh := ot_img.get_height()
+	frames.add_animation("one_two")
+	frames.set_animation_speed("one_two", ANIM_FPS * 2.0)
+	frames.set_animation_loop("one_two", false)
+	for i in ONE_TWO_FRAMES:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = ot_tex
+		atlas.region = Rect2(i * ot_fw, 0, ot_fw, ot_fh)
+		frames.add_frame("one_two", atlas)
+
 	# ── combo_punch 애니메이션 ───────────────────────────────
 	var cp_tex: Texture2D = load("res://assets/sprites/combo_punch.png")
 	var cp_img := cp_tex.get_image()
@@ -307,14 +323,14 @@ func _load_sprite_sheet() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		var kc: int = event.physical_keycode
-		if kc == KEY_SPACE and not _kicking and not _jabbing and not _combo_punching:
+		if kc == KEY_SPACE and not _kicking and not _jabbing and not _one_two_ing and not _combo_punching:
 				_jump_input = true
-		elif kc == KEY_Z and not _kicking and not _jabbing and not _combo_punching:
+		elif kc == KEY_Z and not _kicking and not _jabbing and not _one_two_ing and not _combo_punching:
 			_kicking = true
 			anim_sprite.play("kick")
 			anim_sprite.scale = scale_char
 			anim_sprite.position.y = -173
-		elif kc == KEY_X and not _kicking and not _combo_punching:
+		elif kc == KEY_X and not _kicking and not _one_two_ing and not _combo_punching:
 			# 연타 카운트 갱신
 			if _x_press_timer > 0.0:
 				_x_press_count += 1
@@ -328,6 +344,15 @@ func _input(event: InputEvent) -> void:
 				_jabbing = false
 				_combo_punching = true
 				anim_sprite.play("combo_punch")
+				anim_sprite.scale = scale_char
+				anim_sprite.position.y = -173
+			elif _x_press_count == 2:
+				# 원투 발동
+				_x_press_count = 0
+				_x_press_timer = 0.0
+				_jabbing = false
+				_one_two_ing = true
+				anim_sprite.play("one_two")
 				anim_sprite.scale = scale_char
 				anim_sprite.position.y = -173
 			else:
@@ -345,6 +370,11 @@ func _on_kick_finished() -> void:
 		anim_sprite.position.y = -173
 	elif anim_sprite.animation == "jab":
 		_jabbing = false
+		anim_sprite.play("idle")
+		anim_sprite.scale = scale_char
+		anim_sprite.position.y = -173
+	elif anim_sprite.animation == "one_two":
+		_one_two_ing = false
 		anim_sprite.play("idle")
 		anim_sprite.scale = scale_char
 		anim_sprite.position.y = -173
@@ -403,7 +433,7 @@ func _physics_process(delta: float) -> void:
 
 	var _do_jump := Input.is_action_just_pressed("ui_up") or _jump_input
 	_jump_input = false
-	if player.is_on_floor() and not _jump_pending and not _kicking and not _jabbing and not _combo_punching and _do_jump:
+	if player.is_on_floor() and not _jump_pending and not _kicking and not _jabbing and not _one_two_ing and not _combo_punching and _do_jump:
 		_jump_pending = true
 		anim_sprite.play("jump")
 		anim_sprite.scale = scale_char
@@ -416,7 +446,7 @@ func _physics_process(delta: float) -> void:
 		_jump_pending = false
 
 	# 좌우 이동 (킥/펀치 중 차단)
-	var dir := 0.0 if (_kicking or _jabbing or _combo_punching) else Input.get_axis("ui_left", "ui_right")
+	var dir := 0.0 if (_kicking or _jabbing or _one_two_ing or _combo_punching) else Input.get_axis("ui_left", "ui_right")
 	var spd := SPRINT_SPEED if Input.is_action_pressed("ui_focus_next") else SPEED
 	player.velocity.x = dir * spd
 
@@ -438,10 +468,10 @@ func _physics_process(delta: float) -> void:
 		anim_sprite.flip_h = false
 		_tween_camera_offset(80)
 
-	_is_running = dir != 0 and not _kicking and not _jabbing and not _combo_punching and not _jump_pending and not _landing
+	_is_running = dir != 0 and not _kicking and not _jabbing and not _one_two_ing and not _combo_punching and not _jump_pending and not _landing
 
 	# 발차기 / 잽 / 연속펀치 / 점프 준비 / 착지 recovery 중이면 애니 전환 차단
-	if not _kicking and not _jabbing and not _combo_punching and not _jump_pending and not _landing:
+	if not _kicking and not _jabbing and not _one_two_ing and not _combo_punching and not _jump_pending and not _landing:
 		if not player.is_on_floor():
 			if anim_sprite.animation != "jump":
 				anim_sprite.play("jump")
