@@ -411,7 +411,7 @@ func _physics_process(delta: float) -> void:
 
 	var _do_jump := Input.is_action_just_pressed("ui_up") or _jump_input
 	_jump_input = false
-	if player.is_on_floor() and not _jump_pending and not _kicking and not _punching and _do_jump:
+	if player.is_on_floor() and not _jump_pending and not _kicking and not _jabbing and not _combo_punching and _do_jump:
 		_jump_pending = true
 		anim_sprite.play("jump")
 		anim_sprite.scale = scale_jump
