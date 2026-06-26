@@ -329,6 +329,7 @@ func _input(event: InputEvent) -> void:
 				_jump_input = true
 		elif kc == KEY_Z and not _kicking and not _jabbing and not _one_two_ing and not _combo_punching:
 			_kicking = true
+			anim_sprite.speed_scale = 1.0
 			anim_sprite.play("kick")
 			anim_sprite.scale = scale_char
 			anim_sprite.position.y = -173
@@ -345,6 +346,7 @@ func _input(event: InputEvent) -> void:
 				_x_press_timer = 0.0
 				_jabbing = false
 				_combo_punching = true
+				anim_sprite.speed_scale = 1.0
 				anim_sprite.play("combo_punch")
 				anim_sprite.scale = scale_char
 				anim_sprite.position.y = -173
@@ -352,6 +354,7 @@ func _input(event: InputEvent) -> void:
 				_x_press_count = 0
 				_x_press_timer = 0.0
 				_jabbing = false
+				anim_sprite.speed_scale = 1.0
 				if _one_two_chain_timer > 0.0:
 					# 원투 체인 → 연속펀치
 					_one_two_chain_timer = 0.0
@@ -366,6 +369,7 @@ func _input(event: InputEvent) -> void:
 			else:
 				# 잽 (재)시작
 				_jabbing = true
+				anim_sprite.speed_scale = 1.0
 				anim_sprite.play("jab")
 				anim_sprite.scale = scale_char
 				anim_sprite.position.y = -173
