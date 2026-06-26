@@ -22,6 +22,7 @@ var _is_running: bool = false   # 달리는 중 여부 (배경 속도 배율용)
 var _kicking: bool = false      # 발차기 중 (완료까지 다른 애니 차단)
 var _punching: bool = false     # 연속펀치 중 (완료까지 다른 애니 차단)
 var _jump_pending: bool = false  # 크라우치 준비 중 (6프레임 후 실제 점프)
+var _jump_input: bool = false    # 스페이스 점프 입력 플래그
 var _was_airborne: bool = false  # 착지 감지용
 var _landing: bool = false       # 착지 후 recovery 모션 재생 중
 
@@ -293,7 +294,9 @@ func _load_sprite_sheet() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		var kc: int = event.physical_keycode
-		if (kc == KEY_SPACE or kc == KEY_Z) and not _kicking and not _punching:
+		if kc == KEY_SPACE and not _kicking and not _punching:
+				_jump_input = true
+		elif kc == KEY_Z and not _kicking and not _punching:
 			_kicking = true
 			anim_sprite.play("kick")
 			anim_sprite.scale = Vector2(2.5, 2.5)
@@ -340,7 +343,7 @@ func _build_ui() -> void:
 	canvas.add_child(info_label)
 
 	var hint := Label.new()
-	hint.text = "← → 이동   ↑ 점프   Shift 스프린트   Space/Z 발차기   X 연속펀치"
+	hint.text = "← → 이동   ↑/Space 점프   Shift 스프린트   Z 발차기   X 연속펀치"
 	hint.position = Vector2(20, 690)
 	hint.add_theme_font_size_override("font_size", 20)
 	hint.add_theme_color_override("font_color", Color(0.15, 0.15, 0.15))
@@ -357,8 +360,9 @@ func _physics_process(delta: float) -> void:
 		player.velocity.y = 0.0
 
 	# 점프 입력 → 크라우치 애니 시작 (아직 y 이동 없음)
-	if player.is_on_floor() and not _jump_pending and not _kicking and not _punching and \
-		Input.is_action_just_pressed("ui_up"):
+	var _do_jump := Input.is_action_just_pressed("ui_up") or _jump_input
+	_jump_input = false
+	if player.is_on_floor() and not _jump_pending and not _kicking and not _punching and _do_jump:
 		_jump_pending = true
 		anim_sprite.play("jump")
 		anim_sprite.scale = scale_jump
