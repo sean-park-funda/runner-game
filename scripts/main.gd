@@ -329,7 +329,7 @@ func _input(event: InputEvent) -> void:
 			else:
 				_x_press_count = 1
 			_x_press_timer = JAB_WINDOW
-			if _x_press_count >= 3:
+			if _x_press_count >= 5:
 				# 연속펀치 발동
 				_x_press_count = 0
 				_x_press_timer = 0.0
@@ -386,7 +386,7 @@ func _build_ui() -> void:
 	canvas.add_child(info_label)
 
 	var hint := Label.new()
-	hint.text = "← → 이동   ↑/Space 점프   Shift 스프린트   Z 발차기   X 잽 / XXX 연속펀치"
+	hint.text = "← → 이동   ↑/Space 점프   Shift 스프린트   Z 발차기   X 잽 / X×5 연속펀치"
 	hint.position = Vector2(20, 690)
 	hint.add_theme_font_size_override("font_size", 20)
 	hint.add_theme_color_override("font_color", Color(0.15, 0.15, 0.15))
