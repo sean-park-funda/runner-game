@@ -494,7 +494,7 @@ func _physics_process(delta: float) -> void:
 		elif dir != 0:
 			if anim_sprite.animation != "run":
 				anim_sprite.play("run")
-				anim_sprite.scale = scale_char
+				anim_sprite.scale = scale_char * 1.05
 				anim_sprite.position.y = -173
 		else:
 			if anim_sprite.animation != "idle":
