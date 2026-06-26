@@ -291,7 +291,7 @@ func _load_sprite_sheet() -> void:
 	var ot_fw := ot_img.get_width() / ONE_TWO_FRAMES
 	var ot_fh := ot_img.get_height()
 	frames.add_animation("one_two")
-	frames.set_animation_speed("one_two", ANIM_FPS * 2.0)
+	frames.set_animation_speed("one_two", ANIM_FPS * 4.0)
 	frames.set_animation_loop("one_two", false)
 	for i in ONE_TWO_FRAMES:
 		var atlas := AtlasTexture.new()
