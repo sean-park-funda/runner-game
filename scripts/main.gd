@@ -37,7 +37,7 @@ const SPRINT_SPEED  = 600.0
 const JUMP_VELOCITY = -350.0  # 12FPS × 6프레임 공중 = 0.5s → v = g*0.25 = 350
 const RUN_FRAMES    = 18     # run.png 프레임 수
 const IDLE_FRAMES   = 24     # idle.png 프레임 수 (512px HD, 24프레임)
-const KICK_FRAMES         = 9      # kick.png 프레임 수
+const KICK_FRAMES         = 12     # kick.png 프레임 수
 const JUMP_FRAMES         = 17     # jump.png 프레임 수 (512px HD, 17프레임)
 const JAB_FRAMES          = 10     # jab.png 프레임 수
 const COMBO_PUNCH_FRAMES  = 44     # combo_punch.png 프레임 수
@@ -320,8 +320,8 @@ func _input(event: InputEvent) -> void:
 		elif kc == KEY_Z and not _kicking and not _jabbing and not _combo_punching:
 			_kicking = true
 			anim_sprite.play("kick")
-			anim_sprite.scale = Vector2(2.5, 2.5)
-			anim_sprite.position.y = -60
+			anim_sprite.scale = Vector2(0.84, 0.84)
+			anim_sprite.position.y = -23
 		elif kc == KEY_X and not _kicking and not _combo_punching:
 			# 연타 카운트 갱신
 			if _x_press_timer > 0.0:
