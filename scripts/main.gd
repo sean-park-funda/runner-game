@@ -279,7 +279,7 @@ func _load_sprite_sheet() -> void:
 	var jab_fw := jab_img.get_width() / JAB_FRAMES
 	var jab_fh := jab_img.get_height()
 	frames.add_animation("jab")
-	frames.set_animation_speed("jab", ANIM_FPS * 3.0)
+	frames.set_animation_speed("jab", ANIM_FPS * 2.0)
 	frames.set_animation_loop("jab", false)
 	for i in JAB_FRAMES:
 		var atlas := AtlasTexture.new()
