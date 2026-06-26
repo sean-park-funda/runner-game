@@ -261,7 +261,7 @@ func _load_sprite_sheet() -> void:
 	var jump_fw := jump_img.get_width() / JUMP_FRAMES
 	var jump_fh := jump_img.get_height()
 	frames.add_animation("jump")
-	frames.set_animation_speed("jump", ANIM_FPS)
+	frames.set_animation_speed("jump", ANIM_FPS * 2.0)
 	frames.set_animation_loop("jump", false)  # 한 번 재생 후 마지막 프레임 유지
 	for i in JUMP_FRAMES:
 		var atlas := AtlasTexture.new()
