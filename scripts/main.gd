@@ -39,7 +39,7 @@ const JUMP_FRAMES         = 32     # jump.png 프레임 수
 const JAB_FRAMES          = 9      # jab.png 프레임 수
 const ONE_TWO_FRAMES      = 19     # one_two.png 프레임 수
 const COMBO_PUNCH_FRAMES  = 44     # combo_punch.png 프레임 수
-const JAB_WINDOW          = 0.4    # 연속 클릭 인식 시간(초)
+const JAB_WINDOW          = 0.2    # 연속 클릭 인식 시간(초)
 const ANIM_FPS      = 12.0   # 재생 속도 (높을수록 빠름)
 
 func _ready() -> void:
@@ -305,7 +305,7 @@ func _load_sprite_sheet() -> void:
 	var cp_fw := cp_img.get_width() / COMBO_PUNCH_FRAMES
 	var cp_fh := cp_img.get_height()
 	frames.add_animation("combo_punch")
-	frames.set_animation_speed("combo_punch", ANIM_FPS)
+	frames.set_animation_speed("combo_punch", ANIM_FPS * 2.0)
 	frames.set_animation_loop("combo_punch", false)
 	for i in COMBO_PUNCH_FRAMES:
 		var atlas := AtlasTexture.new()
