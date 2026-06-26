@@ -223,7 +223,7 @@ func _load_sprite_sheet() -> void:
 	var run_fw := run_img.get_width() / RUN_FRAMES
 	var run_fh := run_img.get_height()
 	frames.add_animation("run")
-	frames.set_animation_speed("run", ANIM_FPS)
+	frames.set_animation_speed("run", ANIM_FPS * 3.0)
 	frames.set_animation_loop("run", true)
 	for i in RUN_FRAMES:
 		var atlas := AtlasTexture.new()
@@ -329,7 +329,7 @@ func _input(event: InputEvent) -> void:
 				_jump_input = true
 		elif kc == KEY_Z and not _kicking and not _jabbing and not _one_two_ing and not _combo_punching:
 			_kicking = true
-			anim_sprite.speed_scale = 1.0
+
 			anim_sprite.play("kick")
 			anim_sprite.scale = scale_char
 			anim_sprite.position.y = -173
@@ -346,7 +346,7 @@ func _input(event: InputEvent) -> void:
 				_x_press_timer = 0.0
 				_jabbing = false
 				_combo_punching = true
-				anim_sprite.speed_scale = 1.0
+	
 				anim_sprite.play("combo_punch")
 				anim_sprite.scale = scale_char
 				anim_sprite.position.y = -173
@@ -354,7 +354,7 @@ func _input(event: InputEvent) -> void:
 				_x_press_count = 0
 				_x_press_timer = 0.0
 				_jabbing = false
-				anim_sprite.speed_scale = 1.0
+	
 				if _one_two_chain_timer > 0.0:
 					# 원투 체인 → 연속펀치
 					_one_two_chain_timer = 0.0
@@ -369,7 +369,7 @@ func _input(event: InputEvent) -> void:
 			else:
 				# 잽 (재)시작
 				_jabbing = true
-				anim_sprite.speed_scale = 1.0
+	
 				anim_sprite.play("jab")
 				anim_sprite.scale = scale_char
 				anim_sprite.position.y = -173
@@ -453,7 +453,6 @@ func _physics_process(delta: float) -> void:
 		anim_sprite.play("jump")
 		anim_sprite.scale = scale_char
 		anim_sprite.position.y = -173
-		anim_sprite.speed_scale = 1.0
 
 	# 6번째 프레임(0-indexed=6)에서 실제 점프 발동
 	if _jump_pending and player.is_on_floor() and anim_sprite.frame >= 6:
@@ -497,14 +496,11 @@ func _physics_process(delta: float) -> void:
 				anim_sprite.play("run")
 				anim_sprite.scale = scale_char
 				anim_sprite.position.y = -173
-			var spd_ratio: float = abs(player.velocity.x) / SPEED
-			anim_sprite.speed_scale = max(0.6, spd_ratio) * 3.0
 		else:
 			if anim_sprite.animation != "idle":
 				anim_sprite.play("idle")
 				anim_sprite.scale = scale_char
 				anim_sprite.position.y = -173
-			anim_sprite.speed_scale = 1.0
 
 	# UI 업데이트
 	if info_label:
