@@ -31,7 +31,7 @@ const GRAVITY       = 1400.0
 const SPEED         = 340.0
 const SPRINT_SPEED  = 600.0
 const JUMP_VELOCITY = -350.0  # 12FPS × 6프레임 공중 = 0.5s → v = g*0.25 = 350
-const RUN_FRAMES    = 97     # run.png 프레임 수
+const RUN_FRAMES    = 14     # run.png 프레임 수
 const IDLE_FRAMES   = 24     # idle.png 프레임 수 (512px HD, 24프레임)
 const KICK_FRAMES         = 12     # kick.png 프레임 수
 const JUMP_FRAMES         = 17     # jump.png 프레임 수 (512px HD, 17프레임)
