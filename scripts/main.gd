@@ -379,11 +379,10 @@ func _physics_process(delta: float) -> void:
 
 	# 착지 감지 → jump 애니 13번 프레임(index 12)으로 스냅 후 recovery 재생
 	var is_on_floor_now := player.is_on_floor()
-	if anim_sprite.animation == "jump" and not _jump_pending:
-		if _was_airborne and is_on_floor_now and anim_sprite.frame < 12:
+	if _was_airborne and is_on_floor_now and anim_sprite.animation == "jump" and not _landing:
+		_landing = true
+		if anim_sprite.frame < 12:
 			anim_sprite.frame = 12
-			_landing = true
-			anim_sprite.play("jump")  # frame 12부터 끝까지 재생
 	_was_airborne = not is_on_floor_now
 
 	# 스프라이트 방향 + 카메라 offset 부드럽게 전환
